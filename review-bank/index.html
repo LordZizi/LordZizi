@@ -153,6 +153,35 @@ h1 { font: 400 clamp(22px, 4.6vw, 40px)/1.35 var(--f-pixel); margin: 10px 0 0; l
 .cat { display: grid; gap: 8px; }
 .cat-name { font: 600 .8rem var(--f-head); letter-spacing: .1em; text-transform: uppercase; color: var(--ink-2); }
 .bank-title { display: flex; align-items: center; gap: 10px; margin: 10px 0 -8px; font: 400 15px/1.6 var(--f-pixel); color: var(--dislike); }
+.shop > summary { cursor: pointer; list-style: none; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; color: var(--take); }
+.shop > summary::-webkit-details-marker { display: none; }
+.shop > summary::before { content: "▸"; color: var(--accent); font: 400 12px var(--f-pixel); }
+.shop[open] > summary::before { content: "▾"; }
+.shop > summary h2 { margin: 0; font: 400 13px/1.6 var(--f-pixel); }
+.shop > summary .hint { flex-basis: 100%; }
+.shop-body { display: grid; gap: 16px; padding-top: 16px; }
+.shop-tabs { margin-left: 0; }
+.shop-form { display: grid; gap: 12px; }
+.shop-form h3 { margin: 0; font: 400 12px/1.6 var(--f-pixel); color: var(--accent); }
+.form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 18px; }
+@media (max-width: 640px) { .form-grid { grid-template-columns: 1fr; } }
+.f { display: grid; gap: 6px; align-content: start; }
+.f.wide { grid-column: 1 / -1; }
+.f > span { font: 600 .85rem var(--f-head); color: var(--ink-2); }
+.f small { color: var(--ink-2); font-size: .8rem; line-height: 1.4; }
+.f input, .f textarea, .f select { width: 100%; min-height: 42px; padding: 8px 10px; background: var(--dlg); color: var(--ink); font: 400 .95rem/1.4 var(--f-body); }
+.f textarea { resize: vertical; }
+.spin-btn.small { min-height: 46px; padding: 8px 18px; font-size: 10px; }
+.adv summary { font-size: .9rem; }
+.adv .form-grid { padding-top: 12px; }
+.shop-msg:not(:empty) { color: var(--like); font-weight: 600; }
+.mine-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.mine-list li { display: grid; grid-template-columns: 6.5em minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 6px 10px; background: var(--surface-2); }
+.mine-list b { font: 400 9px var(--f-pixel); color: var(--accent); }
+.props { display: grid; gap: 12px; }
+.prop { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 12px; padding: 12px; background: var(--dlg); cursor: pointer; }
+.prop input { width: 20px; height: 20px; accent-color: var(--accent); margin-top: 2px; }
+.prop b { display: block; } .prop span { color: var(--ink-2); font-size: .92rem; } .prop small { display: block; color: var(--dislike); }
 .gen-pick h3 { margin: 0; font: 400 12px/1.6 var(--f-pixel); color: var(--accent); }
 .hint { margin: 0; color: var(--ink-2); font-size: .92rem; }
 
@@ -289,6 +318,13 @@ dialog.set::backdrop { background: rgba(0,0,0,.6); }
   </section>
 
 
+  <section class="gen px shop-sec" aria-labelledby="shopTitle">
+    <details class="shop">
+      <summary><span id="shopIcon"></span><h2 id="shopTitle">Мастерская</h2><span class="hint">добавить игру, отзыв, жанр, механику или сеттинг — и разобрать игру-референс</span></summary>
+      <div id="shopBody" class="shop-body"></div>
+    </details>
+  </section>
+
   <h2 class="bank-title"><span id="bankIcon"></span>Банк отзывов</h2>
   <div class="bar"><div class="bar" id="games" aria-label="Игры"></div><input class="search px" id="q" type="search" placeholder="Поиск по отзывам" aria-label="Поиск по выводам и цитатам"></div>
 
@@ -300,7 +336,7 @@ dialog.set::backdrop { background: rgba(0,0,0,.6); }
   <p class="tab-note" id="tabNote"></p>
   <div class="list" id="list" role="tabpanel"><div class="empty px loading">Загружаю базу</div></div>
 
-  <footer class="foot">Добавить игру: напишите Claude <span class="phrase px"><span id="phraseText">Разбери отзывы игры НАЗВАНИЕ в банк отзывов</span><button class="pbtn px" type="button" id="copyBtn">Копировать</button></span></footer>
+  <footer class="foot">Добавить игру: напишите Claude <span class="phrase px"><span id="phraseText">Разбери отзывы игры НАЗВАНИЕ в банк отзывов и добавь её механики в конструктор</span><button class="pbtn px" type="button" id="copyBtn">Копировать</button></span></footer>
 </div>
 
 <dialog class="set px" id="setDlg" aria-labelledby="setTitle">
@@ -431,7 +467,7 @@ const TABS = [["like", "Нравится", "--like", ["like"], "heart", "Что 
   ["dislike", "Не нравится", "--dislike", ["dislike"], "broken", "За что ставят минус"],
   ["request", "Просят", "--request", ["request", "idea"], "bubble", "Просьбы и идеи игроков"],
   ["takeaway", "Выводы", "--take", ["takeaway"], "star", "Что взять в свою игру"]];
-const state = { games: [], insights: [], game: "all", q: "", tab: store.get("rb2.tab") || "like", open: new Set(), typed: new Set(), db: null, canWrite: false, animate: true };
+const state = { games: [], insights: [], parts: [], game: "all", q: "", tab: store.get("rb2.tab") || "like", open: new Set(), typed: new Set(), db: null, canWrite: false, animate: true };
 if (!TABS.some(t => t[0] === state.tab)) state.tab = "like";
 const $ = (id) => document.getElementById(id);
 const el = (t, c, txt) => { const n = document.createElement(t); if (c) n.className = c; if (txt != null) n.textContent = txt; return n; };
@@ -601,7 +637,7 @@ function genrePool() {
 }
 const REELS = [["Жанр", genrePool], ["Механика 1", () => MECHS.map(m => m.n)], ["Механика 2", () => MECHS.map(m => m.n)], ["Сеттинг", () => SETTINGS.map(s => s.n)]];
 const fill = (t, st) => t.replace(/\{(\w+)\}/g, (_, k) => k === "heroCap" ? cap(st.hero) : (st[k] ?? ""));
-const fuseName = (A, B) => cap(A.adj[{ m: 0, f: 1, n: 2, pl: 3 }[B.g]] + " " + B.noun);
+const fuseName = (A, B) => A.adj && B.noun ? cap(A.adj[{ m: 0, f: 1, n: 2, pl: 3 }[B.g]] + " " + B.noun) : A.n + " × " + B.n;
 function renderGenHead() { $("genIcon").innerHTML = sprite("dice", 22); }
 function renderReels() {
   const box = $("reels"); box.replaceChildren();
@@ -679,10 +715,10 @@ function renderPick() {
     d.append(body); box.append(d);
   };
   const cur = (k) => G.locks[k] ? G.vals[k] : "";
-  section("genre", "Жанр", cur(0), groupsOf(GENRES).map(([c, arr]) => [c, arr.map(g => chip(g.n, G.locks[0] && G.vals[0] === g.n, () => choose(0, g.n), st.has(stem(g.n)) && "БАЗА", "Жанр есть в играх из базы"))]));
+  section("genre", "Жанр", cur(0), groupsOf(GENRES).map(([c, arr]) => [c, arr.map(g => chip(g.n, G.locks[0] && G.vals[0] === g.n, () => choose(0, g.n), partBadge(g) || (st.has(stem(g.n)) && "БАЗА"), partTitle(g) || "Жанр есть в играх из базы"))]));
   const m1 = cur(1), m2 = cur(2);
-  section("mech", "Механики (до двух)", m1 && m2 ? m1 + " + " + m2 : m1, groupsOf(MECHS).map(([c, arr]) => [c, arr.map(m => { const w = G.locks[1] && G.vals[1] === m.n ? "1" : G.locks[2] && G.vals[2] === m.n ? "2" : ""; return chip(m.n, !!w, () => chooseMech(m.n), w); })]));
-  section("set", "Сеттинг", cur(3), groupsOf(SETTINGS).map(([c, arr]) => [c, arr.map(s => chip(s.n, G.locks[3] && G.vals[3] === s.n, () => choose(3, s.n)))]));
+  section("mech", "Механики (до двух)", m1 && m2 ? m1 + " + " + m2 : m1, groupsOf(MECHS).map(([c, arr]) => [c, arr.map(m => { const w = G.locks[1] && G.vals[1] === m.n ? "1" : G.locks[2] && G.vals[2] === m.n ? "2" : ""; return chip(m.n, !!w, () => chooseMech(m.n), w || partBadge(m), w ? "" : partTitle(m)); })]));
+  section("set", "Сеттинг", cur(3), groupsOf(SETTINGS).map(([c, arr]) => [c, arr.map(s => chip(s.n, G.locks[3] && G.vals[3] === s.n, () => choose(3, s.n), partBadge(s), partTitle(s)))]));
 }
 function reviewBits() {
   let pool = state.insights.filter(i => G.ins.has(i.id)), auto = false;
@@ -708,6 +744,8 @@ function resultRows(r) {
       ["Игровой цикл", [r.A.loop[0], r.A.loop[1], r.B.loop[1], r.B.loop[2]].map(x => fill(x, r.st))], ["Что нового", r.hook]);
   } else rows.push(["Что делаешь", fill(r.A.d, r.st)], ["Игровой цикл", r.A.loop.map(x => fill(x, r.st))]);
   rows.push(["Как устроена игра", r.g.s], ["Прогрессия", fill(r.g.p, r.st)], ["Твист", r.twist], ["Длина", r.g.len]);
+  const refs = [...new Set([r.g, r.A, r.B, r.st].filter(x => x && x.src).map(x => gameName(x.src)))];
+  if (refs.length) rows.push(["Референсы", refs.join(", ")]);
   return rows;
 }
 function resultText() {
@@ -784,6 +822,221 @@ function renderIngr() {
     }));
     r.append(lst);
   }
+}
+
+/* ---------- workshop: viewer-added games, reviews, genres, mechanics, settings (db collection "parts") ---------- */
+const lcFirst = (s) => s ? s[0].toLowerCase() + s.slice(1) : s;
+const BASE = { genre: GENRES.slice(), mech: MECHS.slice(), set: SETTINGS.slice() };
+const uid = (p) => p + "-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+const today = () => new Date().toISOString().slice(0, 10);
+function mergeParts() {
+  const conv = {
+    genre: (p) => ({ c: p.c || "Свои", n: p.n, s: p.s || "", p: p.p || "", len: p.len || "—" }),
+    mech: (p) => {
+      const d = p.d || "", loop = (Array.isArray(p.loop) ? p.loop : []).filter(Boolean).slice(0, 3);
+      while (loop.length < 3) loop.push(["Попробуй механику", "Улучши результат", "Забери награду"][loop.length]);
+      return { c: p.c || "Свои", n: p.n, d, loop, adj: Array.isArray(p.adj) && p.adj.length === 4 && p.adj.every(Boolean) ? p.adj : null, noun: p.noun || "", g: ["m", "f", "n", "pl"].includes(p.g) ? p.g : "f",
+        act: p.act || lcFirst((d.split(/[.;:—]/)[0] || p.n).trim()), rule: p.rule || "", ex: p.ex || "ты используешь «" + p.n + "»", then: p.then || "становится частью механики «" + p.n + "»" };
+    },
+    set: (p) => ({ c: p.c || "Свои", n: p.n, hero: p.hero || "герой", f: !!p.f, allies: p.allies || "союзников", enemies: p.enemies || "врагов", enemiesN: p.enemiesN || "враги", place: p.place || "в этом мире", items: p.items || "странные предметы", res: p.res || "монеты", vibe: p.vibe || "" })
+  };
+  [["genre", GENRES], ["mech", MECHS], ["set", SETTINGS]].forEach(([k, arr]) => {
+    const seen = new Set(BASE[k].map(b => b.n.toLowerCase())), extra = [];
+    state.parts.filter(p => p.kind === k && p.n).forEach(p => { const key = String(p.n).toLowerCase(); if (seen.has(key)) return; seen.add(key); extra.push({ ...conv[k](p), custom: true, src: p.src || "", pid: p.id }); });
+    arr.splice(0, arr.length, ...BASE[k], ...extra);
+  });
+}
+const partBadge = (x) => x && x.custom ? (x.src ? "РЕФ" : "СВОЁ") : "";
+const partTitle = (x) => x && x.custom ? (x.src ? "Из игры-референса: " + gameName(x.src) : "Добавлено в мастерской") : "";
+const SHOP = { tab: "game", msg: "", ref: { game: "", name: "", loading: false, props: null, err: "" } };
+const SHOP_TABS = [["game", "Игра"], ["review", "Отзыв"], ["ref", "Из игры-референса"], ["genre", "Жанр"], ["mech", "Механика"], ["set", "Сеттинг"], ["mine", "Мои добавления"]];
+const TYPE_LABELS = [["like", "Нравится"], ["dislike", "Не нравится"], ["request", "Просят"], ["idea", "Идея игрока"], ["takeaway", "Вывод для моей игры"]];
+function field(label, name, o = {}) {
+  const f = el("label", "f" + (o.wide ? " wide" : "")); f.append(el("span", null, label + (o.req ? " *" : "")));
+  let inp;
+  if (o.options) { inp = el("select", "px"); o.options.forEach(([v, l]) => { const op = el("option", null, l); op.value = v; inp.append(op); }); }
+  else if (o.rows) { inp = el("textarea", "px"); inp.rows = o.rows; }
+  else { inp = el("input", "px"); inp.type = o.type || "text"; if (o.list) inp.setAttribute("list", o.list); }
+  inp.name = name; if (o.ph) inp.placeholder = o.ph; if (o.req) inp.required = true; if (o.value != null) inp.value = o.value;
+  f.append(inp); if (o.hint) f.append(el("small", null, o.hint));
+  return f;
+}
+function datalist(id, values) { const d = el("datalist"); d.id = id; [...new Set(values)].forEach(v => { const o = el("option"); o.value = v; d.append(o); }); return d; }
+const gameOptions = (empty) => [["", empty], ...state.games.map(g => [g.id, g.name])];
+function formBox(title, intro, fields, onSave, extra) {
+  const f = el("form", "shop-form"); f.noValidate = false;
+  f.append(el("h3", null, title)); if (intro) f.append(el("p", "hint", intro));
+  const grid = el("div", "form-grid"); grid.append(...fields); f.append(grid);
+  if (extra) f.append(extra);
+  const save = el("button", "pbtn px spin-btn small", "Сохранить"); save.type = "submit";
+  const row = el("div", "gen-actions"); row.append(save); f.append(row);
+  f.onsubmit = async (e) => {
+    e.preventDefault(); if (!f.reportValidity()) return;
+    const v = {}; new FormData(f).forEach((val, k) => { v[k] = String(val).trim(); });
+    save.disabled = true;
+    try { const msg = await onSave(v); SHOP.msg = msg; sfx.coin(); f.reset(); }
+    catch (err) { SHOP.msg = "Не сохранилось: " + (err && err.message ? err.message : "нет доступа или связи") + "."; sfx.drop(); }
+    save.disabled = false; renderShopMsg();
+  };
+  return f;
+}
+function renderShopMsg() { const m = $("shopMsg"); if (m) m.textContent = SHOP.msg; }
+async function savePart(kind, data) { await state.db.doc("parts/" + uid(kind)).set({ kind, ...data, addedAt: today() }); }
+function renderShop() {
+  const body = $("shopBody"); if (!body) return; body.replaceChildren();
+  $("shopIcon").innerHTML = sprite("gear", 20);
+  if (!state.db || !state.canWrite) { body.append(el("p", "hint", state.db ? "У вас нет прав на запись в эту базу." : "Мастерская работает, когда страница открыта на claude.ai и база загрузилась.")); return; }
+  const seg = el("div", "seg shop-tabs");
+  SHOP_TABS.forEach(([id, l]) => { const b = el("button", "pbtn px", l); b.type = "button"; b.setAttribute("aria-pressed", String(SHOP.tab === id)); b.onclick = () => { SHOP.tab = id; SHOP.msg = ""; sfx.tab(); renderShop(); }; seg.append(b); });
+  body.append(seg);
+  const msg = el("p", "hint shop-msg"); msg.id = "shopMsg"; msg.setAttribute("role", "status"); msg.textContent = SHOP.msg;
+  const t = SHOP.tab;
+  body.append(datalist("dlGenreCat", GENRES.map(g => g.c)), datalist("dlMechCat", MECHS.map(m => m.c)), datalist("dlSetCat", SETTINGS.map(s => s.c)), datalist("dlTheme", state.insights.map(i => i.theme).filter(Boolean)), datalist("dlGenreName", GENRES.map(g => g.n)));
+  if (t === "game") body.append(formBox("Новая игра в базу", "Игра появится в банке отзывов и в списке референсов. Отзывы к ней добавляйте во вкладке «Отзыв» или попросите Claude разобрать отзывы Steam.", [
+    field("Название", "name", { req: true, ph: "Например, Booster Pack Heroes" }),
+    field("Ссылка Steam или AppID", "steam", { ph: "https://store.steampowered.com/app/…" }),
+    field("Жанры через запятую", "genre", { ph: "Рогалик, Колодостроитель", list: "dlGenreName", hint: "Жанры отсюда помечаются «БАЗА» в конструкторе." }),
+    field("Положительных отзывов, %", "pct", { type: "number", ph: "96" }),
+    field("Коротко об игре и отзывах", "summary", { rows: 3, wide: true, ph: "За что хвалят, за что ругают, что просят" })
+  ], async (v) => {
+    const appid = (v.steam.match(/app\/(\d+)/) || v.steam.match(/^(\d+)$/) || [])[1];
+    const data = { name: v.name, genre: v.genre, summary: v.summary, analyzedAt: today() };
+    if (appid) { data.appid = +appid; data.url = "https://store.steampowered.com/app/" + appid + "/"; } else if (v.steam) data.url = v.steam;
+    if (v.pct !== "" && !isNaN(+v.pct)) data.positivePct = Math.max(0, Math.min(100, Math.round(+v.pct)));
+    await state.db.doc("games/" + uid("g")).set(data);
+    return "Игра «" + v.name + "» добавлена.";
+  }));
+  if (t === "review") body.append(state.games.length ? formBox("Новый отзыв или вывод", "Попадёт в нужную вкладку банка отзывов. Цитата необязательна.", [
+    field("Игра", "game", { req: true, options: gameOptions("— выберите игру —") }),
+    field("Раздел", "type", { options: TYPE_LABELS }),
+    field("Суть одной фразой", "text", { req: true, rows: 2, wide: true, ph: "Игроки хвалят короткие раунды: 1–2 минуты и сразу апгрейд" }),
+    field("Тема", "theme", { list: "dlTheme", ph: "Прогрессия" }),
+    field("Доля отзывов, %", "share", { type: "number", ph: "10" }),
+    field("Цитата игрока", "quote", { rows: 2, wide: true, ph: "Текст отзыва как есть" }),
+    field("Ссылка на отзыв", "qurl", { type: "url", ph: "https://steamcommunity.com/…" })
+  ], async (v) => {
+    const data = { game: v.game, type: v.type, text: v.text, theme: v.theme, quotes: v.quote ? [v.qurl ? { text: v.quote, url: v.qurl } : { text: v.quote }] : [], forMyGame: "" };
+    if (v.share !== "" && !isNaN(+v.share)) data.share = Math.round(+v.share);
+    await state.db.doc("insights/" + uid(v.game)).set(data);
+    return "Отзыв добавлен в раздел «" + Object.fromEntries(TYPE_LABELS)[v.type] + "».";
+  }) : el("p", "hint", "Сначала добавьте игру во вкладке «Игра»."));
+  if (t === "genre") body.append(formBox("Свой жанр", "Появится в конструкторе в разделе «Жанр» с пометкой «СВОЁ» или «РЕФ».", [
+    field("Название", "n", { req: true, ph: "Песочница" }),
+    field("Категория", "c", { list: "dlGenreCat", ph: "Экшен" }),
+    field("Как устроена игра", "s", { req: true, rows: 2, wide: true, ph: "Открытый мир без цели: игрок сам придумывает задачи." }),
+    field("Прогрессия", "p", { rows: 2, wide: true, ph: "Новые инструменты и материалы; за {res} открываешь новые биомы.", hint: "{res} подставит ресурс сеттинга в винительном падеже: «консервы», «кредиты»." }),
+    field("Длина партии", "len", { ph: "сессия 30 минут" }),
+    field("Игра-референс", "src", { options: gameOptions("— нет —") })
+  ], async (v) => { await savePart("genre", v); return "Жанр «" + v.n + "» добавлен в конструктор."; }));
+  if (t === "mech") {
+    const adv = el("details", "ingr adv"); adv.append(el("summary", null, "Для красивого скрещивания (необязательно)"));
+    const ag = el("div", "form-grid"); ag.append(
+      field("Действие во 2-м лице", "act", { ph: "строишь ловушки и заманиваешь в них врагов", hint: "Подставляется в «Ты … — и всё, что получилось, идёт в дело»." }),
+      field("Главное правило", "rule", { ph: "Атаковать напрямую нельзя." }),
+      field("Пример действия", "ex", { ph: "ты заманиваешь врага в капкан" }),
+      field("Что это вызывает", "then", { ph: "запускает цепную реакцию ловушек", hint: "Продолжение фразы «и это сразу …»." }),
+      field("Прилагательное: м, ж, ср, мн", "adj", { ph: "ловчий, ловчая, ловчее, ловчие", hint: "Из него строится название скрещивания: «Ловчая кухня»." }),
+      field("Существительное и род", "noun", { ph: "ловушки, мн", hint: "Род: м, ж, ср или мн." }));
+    adv.append(ag);
+    body.append(formBox("Своя механика", "Конкретно: что игрок делает руками. В описании можно использовать подстановки сеттинга.", [
+      field("Название", "n", { req: true, ph: "Строительство мостов" }),
+      field("Категория", "c", { list: "dlMechCat", ph: "Головоломки и истории" }),
+      field("Что делает игрок", "d", { req: true, rows: 3, wide: true, ph: "Строишь мосты из досок {place}, а {enemiesN} проверяют их на прочность.", hint: "Подстановки: {enemies} врагов (род. мн.), {enemiesN} враги (им. мн.), {allies} союзников, {place} «в …», {items} предметы, {res} ресурс, {heroCap} Герой." }),
+      field("Цикл: шаг 1", "l1", { ph: "Посмотри на пропасть" }), field("Цикл: шаг 2", "l2", { ph: "Построй мост" }), field("Цикл: шаг 3", "l3", { ph: "Проведи груз и получи {res}" }),
+      field("Игра-референс", "src", { options: gameOptions("— нет —") })
+    ], async (v) => {
+      const adj = v.adj ? v.adj.split(/[,;]/).map(x => x.trim()).filter(Boolean) : [];
+      const [noun, gRaw] = (v.noun || "").split(/[,;]/).map(x => x.trim());
+      const g = { м: "m", ж: "f", ср: "n", мн: "pl", m: "m", f: "f", n: "n", pl: "pl" }[(gRaw || "").toLowerCase()] || "f";
+      const data = { n: v.n, c: v.c, d: v.d, loop: [v.l1, v.l2, v.l3].filter(Boolean), src: v.src, act: v.act, rule: v.rule, ex: v.ex, then: v.then };
+      if (adj.length === 4) data.adj = adj; if (noun) { data.noun = noun; data.g = g; }
+      await savePart("mech", data); return "Механика «" + v.n + "» добавлена в конструктор.";
+    }, adv));
+  }
+  if (t === "set") body.append(formBox("Свой сеттинг", "Падежи важны: из этих слов собираются фразы вроде «кормишь ими зомби» и «волны врагов идут каждую ночь».", [
+    field("Название", "n", { req: true, ph: "Средневековый рынок" }),
+    field("Категория", "c", { list: "dlSetCat", ph: "Приключения" }),
+    field("Атмосфера одной фразой", "vibe", { wide: true, ph: "Шумный рынок, где всё продаётся, даже секреты." }),
+    field("Герой (кто?)", "hero", { ph: "юный торговец" }),
+    field("Союзники (кого?)", "allies", { ph: "торговцев и стражников" }),
+    field("Враги (кого?)", "enemies", { ph: "воров" }),
+    field("Враги (кто?)", "enemiesN", { ph: "воры" }),
+    field("Место (где?)", "place", { ph: "на городском рынке" }),
+    field("Предметы через запятую", "items", { ph: "пряности, шёлк, поддельные карты" }),
+    field("Ресурс (что? копишь …)", "res", { ph: "монеты" }),
+    field("Игра-референс", "src", { options: gameOptions("— нет —") })
+  ], async (v) => { await savePart("set", v); return "Сеттинг «" + v.n + "» добавлен в конструктор."; }));
+  if (t === "ref") body.append(renderRef());
+  if (t === "mine") {
+    const mine = state.parts.slice().sort((a, b) => String(b.addedAt || "").localeCompare(String(a.addedAt || "")));
+    if (!mine.length) body.append(el("p", "hint", "Пока ничего не добавлено."));
+    else {
+      const ul = el("ul", "mine-list");
+      mine.forEach(p => {
+        const li = el("li"); li.append(el("b", null, { genre: "Жанр", mech: "Механика", set: "Сеттинг" }[p.kind] || p.kind), el("span", null, p.n + (p.src ? " · из «" + gameName(p.src) + "»" : "")));
+        const x = el("button", "x", "✕"); x.type = "button"; x.setAttribute("aria-label", "Удалить «" + p.n + "»");
+        x.onclick = async () => { if (!confirm("Удалить «" + p.n + "» из конструктора?")) return; try { await state.db.doc("parts/" + p.id).delete(); sfx.drop(); } catch { SHOP.msg = "Не удалось удалить."; renderShopMsg(); } };
+        li.append(x); ul.append(li);
+      });
+      body.append(ul);
+    }
+  }
+  body.append(msg);
+}
+function renderRef() {
+  const box = el("div", "shop-form"), R = SHOP.ref;
+  box.append(el("h3", null, "Механики и жанры из игры-референса"), el("p", "hint", "Выберите игру из базы или впишите любую. Claude предложит её ключевые механики и жанры своими словами; отметьте нужные и добавьте в конструктор."));
+  const grid = el("div", "form-grid");
+  const fg = field("Игра из базы", "refGame", { options: gameOptions("— не из базы —"), value: R.game }); fg.querySelector("select").onchange = (e) => { R.game = e.target.value; };
+  const fn = field("…или название любой игры", "refName", { ph: "Например, Stardew Valley", value: R.name }); fn.querySelector("input").oninput = (e) => { R.name = e.target.value; };
+  grid.append(fg, fn); box.append(grid);
+  const row = el("div", "gen-actions");
+  if (sampleFn) { const b = el("button", "pbtn px spin-btn small", R.loading ? "Claude разбирает…" : "Разобрать с Claude"); b.type = "button"; b.disabled = R.loading; b.onclick = refAsk; row.append(b); }
+  else row.append(el("p", "hint", "Разбор с Claude недоступен в этом окне. Добавьте механики вручную во вкладке «Механика» и укажите игру-референс."));
+  box.append(row);
+  if (R.err) box.append(el("p", "hint", R.err));
+  if (R.props) {
+    const list = el("div", "props");
+    R.props.forEach((p, i) => {
+      const card = el("label", "prop px"); const cb = el("input"); cb.type = "checkbox"; cb.checked = p.on; cb.onchange = () => { p.on = cb.checked; };
+      const t = el("div"); t.append(el("b", null, (p.kind === "genre" ? "Жанр: " : "Механика: ") + p.n), el("span", null, p.kind === "genre" ? p.s : p.d));
+      if (p.dup) t.append(el("small", null, "Уже есть в конструкторе — добавлено не будет."));
+      card.append(cb, t); list.append(card);
+    });
+    box.append(list);
+    const add = el("button", "pbtn px spin-btn small", "Добавить выбранное"); add.type = "button";
+    add.onclick = async () => {
+      const src = R.srcId || R.srcName, chosen = R.props.filter(p => p.on && !p.dup); let n = 0;
+      for (const p of chosen) { const { on, dup, kind, ...data } = p; try { await savePart(kind, { ...data, src }); n++; } catch {} }
+      SHOP.msg = n ? "Добавлено в конструктор: " + n + "." : "Ничего не добавлено."; if (n) sfx.coin(); R.props = null; renderShop();
+    };
+    const r2 = el("div", "gen-actions"); r2.append(add); box.append(r2);
+  }
+  return box;
+}
+async function refAsk() {
+  const R = SHOP.ref, gm = state.games.find(g => g.id === R.game), name = gm ? gm.name : R.name.trim();
+  if (!name) { R.err = "Выберите игру или впишите название."; renderShop(); return; }
+  R.loading = true; R.err = ""; R.props = null; R.srcId = gm ? gm.id : ""; R.srcName = gm ? "" : name; sfx.open(); renderShop();
+  const notes = gm ? ["Жанр: " + (gm.genre || "?"), "Сводка отзывов: " + (gm.summary || "нет"), ...state.insights.filter(i => i.game === gm.id && i.type !== "takeaway").slice(0, 12).map(i => "- " + i.text)].join("\n") : "";
+  const prompt = "Ты геймдизайнер. Игра-референс: " + name + ".\n" + notes
+    + "\n\nВыдели 2–4 ключевые механики и 1–2 жанра этой игры для конструктора 2D-игр. Описывай своими словами, не копируй названия, имена персонажей и тексты игры. Пиши по-русски."
+    + "\nКатегории механик: " + [...new Set(BASE.mech.map(m => m.c))].join(", ") + ". Категории жанров: " + [...new Set(BASE.genre.map(g => g.c))].join(", ") + "."
+    + "\nВ полях d и loop можно использовать подстановки: {enemies} — враги в родительном падеже мн. ч., {enemiesN} — враги в именительном мн. ч., {allies} — союзники в родительном мн. ч., {place} — оборот «в …», {items} — предметы, {res} — ресурс в винительном падеже, {heroCap} — герой с заглавной."
+    + "\nВерни только JSON: {\"genres\":[{\"n\":\"название\",\"c\":\"категория\",\"s\":\"как устроена игра, 1 предложение\",\"p\":\"прогрессия, 1 предложение\",\"len\":\"длина партии\"}],"
+    + "\"mechanics\":[{\"n\":\"название 1–3 слова\",\"c\":\"категория\",\"d\":\"что делает игрок, 1–2 предложения во 2-м лице\",\"loop\":[\"шаг\",\"шаг\",\"шаг\"],\"act\":\"глагольная фраза во 2-м лице без «ты»\",\"rule\":\"главное правило\",\"ex\":\"пример действия, начинается с «ты»\",\"then\":\"продолжение фразы «и это сразу …», глагол в 3-м лице\",\"adj\":[\"прилагательное м. р.\",\"ж. р.\",\"ср. р.\",\"мн. ч.\"],\"noun\":\"существительное — суть механики\",\"g\":\"m|f|n|pl\"}]}";
+  try {
+    const out = await sampleFn.json(prompt);
+    const have = (arr, n) => arr.some(x => x.n.toLowerCase() === String(n || "").toLowerCase());
+    const props = [];
+    (out && Array.isArray(out.genres) ? out.genres : []).forEach(g => g && g.n && props.push({ kind: "genre", n: String(g.n), c: String(g.c || ""), s: String(g.s || ""), p: String(g.p || ""), len: String(g.len || ""), on: true, dup: have(GENRES, g.n) }));
+    (out && Array.isArray(out.mechanics) ? out.mechanics : []).forEach(m => m && m.n && props.push({ kind: "mech", n: String(m.n), c: String(m.c || ""), d: String(m.d || ""), loop: Array.isArray(m.loop) ? m.loop.map(String).slice(0, 3) : [], act: String(m.act || ""), rule: String(m.rule || ""), ex: String(m.ex || ""), then: String(m.then || ""), adj: Array.isArray(m.adj) ? m.adj.map(String).slice(0, 4) : [], noun: String(m.noun || ""), g: String(m.g || "f"), on: true, dup: have(MECHS, m.n) }));
+    R.props = props; if (!props.length) R.err = "Claude ничего не предложил. Попробуйте ещё раз или добавьте вручную."; sfx.jingle();
+  } catch (e) {
+    if (e && e.code === "not_granted") sampleFn = null;
+    R.err = e && e.code === "rate_limited" ? "Слишком много запросов. Попробуйте через минуту." : e && e.code === "not_granted" ? "Доступ к Claude не разрешён." : "Не получилось разобрать игру. Попробуйте ещё раз.";
+  }
+  R.loading = false; renderShop();
 }
 
 /* ---------- render ---------- */
@@ -909,7 +1162,7 @@ function renderList() {
   const max = Math.max(...items.map(i => i.share || 0), 1);
   items.forEach((i, n) => box.append(card(i, n, max)));
 }
-function renderAll() { renderGames(); renderGameCard(); renderQuest(); renderTabs(); renderList(); renderIngr(); renderPick(); }
+function renderAll() { renderGames(); renderGameCard(); renderQuest(); renderTabs(); renderList(); renderIngr(); renderPick(); if (SHOP.tab === "mine") renderShop(); }
 
 /* ---------- settings ---------- */
 const PALS = [["arcade", "Аркада", ["#0b0d1a", "#ff4fa3", "#3ddc84", "#4cc9f0"]], ["sunset", "Закат", ["#1a0b2e", "#ff7edb", "#72f1b8", "#fede5d"]],
@@ -938,9 +1191,11 @@ $("bankIcon").innerHTML = sprite("heart", 20);
   state.db = db;
   c.use("sample").then(s => { if (s) { sampleFn = s; renderGenOut(); } }).catch(() => {});
   const user = await c.use("user"); const cw = user ? await user.can("data.write") : null; state.canWrite = cw !== false;
+  renderShop();
   const t = setTimeout(() => { if (!state.insights.length) $("list").replaceChildren(el("div", "empty px", "База пока не загрузилась. Проверьте соединение: страница обновится сама.")); }, 10000);
   let first = true;
   db.collection("games").onSnapshot(s => { state.games = s.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => String(b.analyzedAt || "").localeCompare(String(a.analyzedAt || ""))); renderAll(); }, () => {});
+  db.collection("parts").onSnapshot(s => { state.parts = s.docs.map(d => ({ id: d.id, ...d.data() })); mergeParts(); renderPick(); if (SHOP.tab === "mine") renderShop(); }, () => {});
   db.collection("insights").onSnapshot(s => { clearTimeout(t); state.insights = s.docs.map(d => ({ id: d.id, ...d.data() })); state.animate = first; first = false; renderAll(); }, () => clearTimeout(t));
 })();
 </script>

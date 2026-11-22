@@ -1,6 +1,6 @@
 {
  "bph-01": {
-  "forMyGame": "",
+  "forMyGame": "use",
   "game": "booster-pack-heroes",
   "quotes": [
    {
@@ -14,7 +14,7 @@
   "type": "like"
  },
  "bph-02": {
-  "forMyGame": "",
+  "forMyGame": "use",
   "game": "booster-pack-heroes",
   "quotes": [
    {
@@ -42,7 +42,7 @@
   "type": "like"
  },
  "bph-04": {
-  "forMyGame": "",
+  "forMyGame": "use",
   "game": "booster-pack-heroes",
   "quotes": [
    {
@@ -247,7 +247,7 @@
   "type": "dislike"
  },
  "bph-18": {
-  "forMyGame": "",
+  "forMyGame": "use",
   "game": "booster-pack-heroes",
   "quotes": [
    {
