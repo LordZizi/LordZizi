@@ -2,7 +2,7 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@500;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@500;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;700&family=Press+Start+2P&family=Fira+Code:wght@500;700&family=Fira+Sans:wght@400;500;600&family=Lora:wght@600;700&display=swap">
 <style>
 /* Layout: title + game chips -> "take into my game" list -> four short columns (liked / disliked / asked / takeaways), top 5 each, quotes on demand. Data lives in db. */
 :root {
@@ -21,13 +21,34 @@
   --bg: #15130f; --surface: #1e1b16; --surface-2: #27231c; --line: #3a342a;
   --ink: #f3eee6; --ink-2: #b3aa9b; --accent: #fb923c;
   --like: #4ade80; --dislike: #f87171; --request: #60a5fa; --take: #facc15; color-scheme: dark }
+/* Palettes (chosen per viewer, saved in localStorage). "paper" follows the system theme; the others are fixed. */
+:root[data-palette="arcade"] { --bg: #0b1120; --surface: #131c31; --surface-2: #1c2741; --line: #26324d; --ink: #f1f5f9; --ink-2: #9fb0c8; --accent: #f43f5e; --like: #4ade80; --dislike: #fb7185; --request: #38bdf8; --take: #fbbf24; color-scheme: dark; }
+:root[data-palette="dusk"] { --bg: #100e22; --surface: #1a1733; --surface-2: #24204a; --line: #332c63; --ink: #ece9ff; --ink-2: #a9a3cf; --accent: #a78bfa; --like: #34d399; --dislike: #fb7185; --request: #7dd3fc; --take: #fcd34d; color-scheme: dark; }
+:root[data-palette="lab"] { --bg: #f3f6fa; --surface: #ffffff; --surface-2: #e8eef5; --line: #cfd8e3; --ink: #0f1b2d; --ink-2: #4a5a70; --accent: #1e3a5f; --like: #047857; --dislike: #b42318; --request: #1d4ed8; --take: #a16207; color-scheme: light; }
+:root[data-palette="meadow"] { --bg: #eef3e6; --surface: #fbfdf7; --surface-2: #e2ebd3; --line: #c9d6b4; --ink: #1d2a17; --ink-2: #53634a; --accent: #b4531a; --like: #3f7d20; --dislike: #b3261e; --request: #2a6f97; --take: #8a6a00; color-scheme: light; }
+:root[data-fonts="pixel"] { --f-display: "Press Start 2P", "Rubik", system-ui, sans-serif; }
+:root[data-fonts="data"] { --f-display: "Fira Code", ui-monospace, monospace; --f-body: "Fira Sans", system-ui, sans-serif; --f-mono: "Fira Code", ui-monospace, monospace; }
+:root[data-fonts="book"] { --f-display: "Lora", Georgia, serif; }
 * { box-sizing: border-box; }
 body { background: var(--bg); color: var(--ink); font: 15px/1.5 var(--f-body); }
 .wrap { max-width: 1180px; margin: 0 auto; padding-block: 28px 72px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 22px; }
 button, input { font: inherit; color: inherit; }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .kicker { font: 700 11px var(--f-mono); letter-spacing: .14em; text-transform: uppercase; color: var(--accent); }
-h1 { font: 800 clamp(30px, 5vw, 46px)/1 var(--f-display); margin: 4px 0 0; letter-spacing: -.02em; }
+h1 { font: 800 clamp(30px, 5vw, 46px)/1.05 var(--f-display); margin: 6px 0 0; letter-spacing: -.02em; text-wrap: balance; }
+:root[data-fonts="pixel"] h1 { font-size: clamp(22px, 3.6vw, 34px); line-height: 1.3; letter-spacing: 0; font-weight: 400; }
+:root[data-fonts="pixel"] .kicker, :root[data-fonts="pixel"] .mine h2, :root[data-fonts="pixel"] .col h2 { font-family: var(--f-display); font-size: 9px; letter-spacing: .06em; font-weight: 400; line-height: 1.6; }
+:root[data-fonts="pixel"] .rank { font: 400 9px var(--f-display); }
+.top { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; gap: 16px; }
+.look { display: grid; gap: 8px; justify-items: end; }
+.look-row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
+.look-row > span { font: 700 10px var(--f-body); letter-spacing: .12em; text-transform: uppercase; color: var(--ink-2); margin-right: 4px; }
+.sw { width: 34px; height: 34px; border-radius: 10px; border: 1px solid var(--line); cursor: pointer; padding: 0; display: grid; grid-template-columns: 1fr 1fr; overflow: hidden; background: none; }
+.sw i { display: block; }
+.sw[aria-pressed="true"] { outline: 2px solid var(--ink); outline-offset: 2px; }
+.fbtn { min-height: 34px; padding: 4px 10px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); cursor: pointer; font-size: 13px; }
+.fbtn[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+@media (max-width: 640px) { .look { justify-items: start; } .look-row { justify-content: flex-start; } }
 .lead { margin: 8px 0 0; color: var(--ink-2); max-width: 62ch; }
 .bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .game { display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 6px 12px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); cursor: pointer; font-weight: 600; }
@@ -47,6 +68,12 @@ h1 { font: 800 clamp(30px, 5vw, 46px)/1 var(--f-display); margin: 4px 0 0; lette
 @media (max-width: 560px) { .cols { grid-template-columns: 1fr; } }
 .col { --c: var(--ink-2); background: var(--surface); border: 1px solid var(--line); border-top: 3px solid var(--c); border-radius: 12px; padding: 12px 12px 8px; display: grid; gap: 6px; min-width: 0; }
 .col h2 { color: var(--c); }
+.col h2 svg { width: 16px; height: 16px; flex: none; }
+.col h2 b { margin-left: auto; }
+.col { background: linear-gradient(180deg, color-mix(in srgb, var(--c) 7%, var(--surface)) 0, var(--surface) 64px); }
+.bar-share { display: inline-block; width: 44px; height: 4px; border-radius: 2px; background: var(--surface-2); overflow: hidden; vertical-align: middle; }
+.bar-share i { display: block; height: 100%; background: var(--c); border-radius: 2px; }
+.rank { font: 700 11px var(--f-mono); color: var(--c); opacity: .8; margin-right: 6px; }
 .col h2 b { font: 700 12px var(--f-mono); color: var(--ink-2); }
 .row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px; padding: 8px 4px; border-top: 1px solid var(--line); }
 .row:first-of-type { border-top: 0; }
@@ -59,6 +86,11 @@ h1 { font: 800 clamp(30px, 5vw, 46px)/1 var(--f-display); margin: 4px 0 0; lette
 .row blockquote a { color: inherit; }
 .tick { width: 30px; height: 30px; border-radius: 8px; border: 1px solid var(--line); background: transparent; cursor: pointer; display: grid; place-items: center; color: transparent; }
 .tick:hover { border-color: var(--like); }
+.tick, .game, .fbtn, .sw, .phrase button { transition: background-color .15s ease, border-color .15s ease, color .15s ease, transform .1s ease; }
+.tick:active, .game:active, .fbtn:active { transform: scale(.96); }
+.row { transition: background-color .15s ease; border-radius: 8px; }
+.row:hover { background: color-mix(in srgb, var(--c) 6%, transparent); }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 .tick[aria-pressed="true"] { background: var(--like); border-color: var(--like); color: var(--bg); }
 .tick svg { width: 16px; height: 16px; }
 .more { all: unset; cursor: pointer; font: 600 13px var(--f-body); color: var(--accent); padding: 6px 4px; }
@@ -69,10 +101,16 @@ h1 { font: 800 clamp(30px, 5vw, 46px)/1 var(--f-display); margin: 4px 0 0; lette
 </style>
 
 <div class="wrap">
-  <header>
-    <div class="kicker">База знаний для моей 2D-игры</div>
-    <h1>Банк отзывов</h1>
-    <p class="lead">Главное из отзывов Steam о похожих играх. Отмечайте галочкой то, что стоит учесть в своей игре.</p>
+  <header class="top">
+    <div>
+      <div class="kicker">База знаний для моей 2D-игры</div>
+      <h1>Банк отзывов</h1>
+      <p class="lead">Главное из отзывов Steam о похожих играх. Отмечайте галочкой то, что стоит учесть в своей игре.</p>
+    </div>
+    <div class="look" aria-label="Оформление">
+      <div class="look-row" id="palettes"><span>Палитра</span></div>
+      <div class="look-row" id="fonts"><span>Шрифт</span></div>
+    </div>
   </header>
 
   <div class="bar"><div class="bar" id="games" aria-label="Игры"></div><input class="search" id="q" type="search" placeholder="Поиск" aria-label="Поиск по выводам"></div>
@@ -88,6 +126,35 @@ h1 { font: 800 clamp(30px, 5vw, 46px)/1 var(--f-display); margin: 4px 0 0; lette
 /* ideas from players count as "asked for" so there are four columns */
 const COLS = [["like", "Нравится", "--like", ["like"]], ["dislike", "Не нравится", "--dislike", ["dislike"]], ["request", "Просят", "--request", ["request", "idea"]], ["takeaway", "Выводы", "--take", ["takeaway"]]];
 const TOP = 5;
+const ICON = {
+  like: '<path d="M7 10v11"/><path d="M15 5.9 14 10h5.8a2 2 0 0 1 1.9 2.6l-2.3 7A2 2 0 0 1 17.5 21H4a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1h2.8a2 2 0 0 0 1.8-1.1L12 2a3.1 3.1 0 0 1 3 3.9Z"/>',
+  dislike: '<path d="M17 14V3"/><path d="M9 18.1 10 14H4.2a2 2 0 0 1-1.9-2.6l2.3-7A2 2 0 0 1 6.5 3H20a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1h-2.8a2 2 0 0 0-1.8 1.1L12 22a3.1 3.1 0 0 1-3-3.9Z"/>',
+  request: '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M12 7v4"/><path d="M12 14h.01"/>',
+  takeaway: '<path d="M9 18h6"/><path d="M10 22h4"/><path d="M15.1 14c.2-1 .7-1.7 1.4-2.5A4.6 4.6 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/>'
+};
+const svg = (p) => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + p + '</svg>';
+const PALETTES = [
+  ["paper", "Бумага: тёплая, светлая и тёмная по системе", ["#f4f2ee", "#c2410c", "#15803d", "#1c1a17"]],
+  ["meadow", "Луг: зелень и терракота, как у уютных инди", ["#eef3e6", "#b4531a", "#3f7d20", "#2a6f97"]],
+  ["lab", "Лаборатория: строгая, для чтения", ["#f3f6fa", "#1e3a5f", "#047857", "#a16207"]],
+  ["arcade", "Аркада: тёмная, ретро-неон", ["#0b1120", "#f43f5e", "#4ade80", "#38bdf8"]],
+  ["dusk", "Сумерки: тёмно-фиолетовая", ["#100e22", "#a78bfa", "#34d399", "#fcd34d"]]
+];
+const FONTS = [["modern", "Rubik"], ["pixel", "Пиксель"], ["data", "Fira"], ["book", "Lora"]];
+const store = { get(k) { try { return localStorage.getItem(k); } catch { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch {} } };
+function applyLook() {
+  const p = store.get("rb-palette") || "paper", f = store.get("rb-fonts") || "modern";
+  const r = document.documentElement;
+  p === "paper" ? r.removeAttribute("data-palette") : r.setAttribute("data-palette", p);
+  f === "modern" ? r.removeAttribute("data-fonts") : r.setAttribute("data-fonts", f);
+  document.querySelectorAll("#palettes .sw").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.v === p)));
+  document.querySelectorAll("#fonts .fbtn").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.v === f)));
+}
+function buildLook() {
+  PALETTES.forEach(([id, label, cs]) => { const b = el("button", "sw"); b.type = "button"; b.dataset.v = id; b.title = label; b.setAttribute("aria-label", label); cs.forEach(c => { const i = el("i"); i.style.background = c; b.append(i); }); b.onclick = () => { store.set("rb-palette", id); applyLook(); }; $("palettes").append(b); });
+  FONTS.forEach(([id, label]) => { const b = el("button", "fbtn", label); b.type = "button"; b.dataset.v = id; b.onclick = () => { store.set("rb-fonts", id); applyLook(); }; $("fonts").append(b); });
+  applyLook();
+}
 const state = { games: [], insights: [], game: "all", q: "", open: new Set(), expanded: new Set(), db: null, canWrite: false };
 const $ = (id) => document.getElementById(id);
 const el = (t, c, txt) => { const n = document.createElement(t); if (c) n.className = c; if (txt != null) n.textContent = txt; return n; };
@@ -123,13 +190,13 @@ function renderMine() {
   picked.forEach(i => { const li = el("li", null, i.text + " "); li.append(el("span", null, "· " + gameName(i.game))); ul.append(li); });
   m.append(ul);
 }
-function row(i) {
+function row(i, n) {
   const r = el("div", "row");
   const t = el("button", "row-text"); t.type = "button"; t.setAttribute("aria-expanded", String(state.open.has(i.id)));
-  t.append(document.createTextNode(i.text));
+  t.append(el("span", "rank", String(n + 1).padStart(2, "0")), document.createTextNode(i.text));
   const meta = el("div", "row-meta");
-  if (i.share) meta.append(el("span", null, "~" + i.share + "%"));
-  if (state.game === "all") meta.append(el("span", null, gameName(i.game)));
+  if (i.share) { const bs = el("span", "bar-share"); const fill = el("i"); fill.style.width = Math.min(100, i.share * 4) + "%"; bs.append(fill); meta.append(bs, el("span", null, "~" + i.share + "%")); }
+  if (state.game === "all" && state.games.length > 1) meta.append(el("span", null, gameName(i.game)));
   if ((i.quotes || []).length) meta.append(el("span", null, state.open.has(i.id) ? "скрыть цитаты" : "цитаты"));
   t.append(meta);
   t.onclick = () => { state.open.has(i.id) ? state.open.delete(i.id) : state.open.add(i.id); renderCols(); };
@@ -149,9 +216,9 @@ function renderCols() {
   for (const [key, label, cv, types] of COLS) {
     const items = scoped().filter(i => types.includes(i.type) && matches(i)).sort((a, b) => (b.share || 0) - (a.share || 0));
     const col = el("section", "col"); col.style.setProperty("--c", `var(${cv})`);
-    const h = el("h2", null, label + " "); h.append(el("b", null, String(items.length))); col.append(h);
+    const h = el("h2"); h.innerHTML = svg(ICON[key]); h.append(document.createTextNode(label)); h.append(el("b", null, String(items.length))); col.append(h);
     const show = state.expanded.has(key) ? items : items.slice(0, TOP);
-    show.forEach(i => col.append(row(i)));
+    show.forEach((i, n) => col.append(row(i, n)));
     if (!items.length) col.append(el("p", "row-meta", "Ничего"));
     if (items.length > TOP) { const mb = el("button", "more", state.expanded.has(key) ? "Свернуть" : "Показать ещё " + (items.length - TOP)); mb.type = "button"; mb.onclick = () => { state.expanded.has(key) ? state.expanded.delete(key) : state.expanded.add(key); renderCols(); }; col.append(mb); }
     box.append(col);
@@ -160,6 +227,7 @@ function renderCols() {
 function renderAll() { renderGames(); renderMine(); renderCols(); }
 $("q").addEventListener("input", e => { state.q = e.target.value.trim(); renderCols(); });
 $("copyBtn").onclick = async () => { try { await navigator.clipboard.writeText($("phraseText").textContent); $("copyBtn").textContent = "Скопировано"; } catch { const r = document.createRange(); r.selectNodeContents($("phraseText")); const s = getSelection(); s.removeAllRanges(); s.addRange(r); } };
+buildLook();
 renderAll();
 (async () => {
   const c = window.claude; const db = c ? await c.use("db") : null;
