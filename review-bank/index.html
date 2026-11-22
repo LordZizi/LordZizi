@@ -127,6 +127,18 @@ h1 { font: 400 clamp(22px, 4.6vw, 40px)/1.35 var(--f-pixel); margin: 10px 0 0; l
 .pitch { margin: -4px 0 14px; color: var(--ink-2); }
 .gen-out dd ol { margin: 0; padding-left: 20px; }
 .gen-pick { display: grid; gap: 14px; padding-top: 18px; border-top: 3px dashed var(--line); }
+.fuse-row { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto; gap: 14px; align-items: center; }
+@media (max-width: 760px) { .fuse-row { grid-template-columns: 1fr; } .fuse-row .op { justify-self: center; } }
+.slot { min-height: 84px; }
+.slot.empty .val { color: var(--ink-2); }
+.fuse-row .op { font: 400 18px var(--f-pixel); color: var(--accent); }
+.fuse-row.go .slot:first-child { animation: fuseL .5s steps(5); }
+.fuse-row.go .slot:nth-child(3) { animation: fuseR .5s steps(5); }
+@keyframes fuseL { 60% { transform: translateX(24px) scale(.94); } 80% { transform: translateX(6px); } }
+@keyframes fuseR { 60% { transform: translateX(-24px) scale(.94); } 80% { transform: translateX(-6px); } }
+.flash-in { animation: flashin .5s steps(4); }
+@keyframes flashin { 0% { filter: brightness(2.2); transform: scale(.97); } }
+.chip i.tagab { font: 400 8px var(--f-pixel); font-style: normal; margin-left: 6px; }
 .gen-pick h3 { margin: 0; font: 400 12px/1.6 var(--f-pixel); color: var(--accent); }
 .hint { margin: 0; color: var(--ink-2); font-size: .92rem; }
 
@@ -262,6 +274,16 @@ dialog.set::backdrop { background: rgba(0,0,0,.6); }
     <details class="ingr" id="ingr"><summary id="ingrSum"></summary><div class="ingr-body" id="ingrBody"></div></details>
   </section>
 
+  <section class="gen px" id="fuse" aria-labelledby="fuseTitle">
+    <div class="gen-head">
+      <h2 id="fuseTitle"><span id="fuseIcon"></span>Скрещивание механик</h2>
+      <p>Возьмите две механики — получится новая, но узнаваемая. Её можно сразу отправить в генератор игр.</p>
+    </div>
+    <div class="fuse-row" id="fuseRow"></div>
+    <div class="gen-out" id="fuseOut"></div>
+    <div class="ingr-row"><span>Механики</span><div class="chips" id="fuseChips"></div></div>
+  </section>
+
   <div class="bar"><div class="bar" id="games" aria-label="Игры"></div><input class="search px" id="q" type="search" placeholder="Поиск по отзывам" aria-label="Поиск по выводам и цитатам"></div>
 
   <section class="gamecard px" id="gamecard" hidden></section>
@@ -299,7 +321,8 @@ const MAPS = {
   check: ["........", "......11", ".....11.", "1...11..", "11.11...", ".111....", "..1.....", "........"],
   spk: ["...1....", "..11..1.", "1111...1", "1111.1.1", "1111.1.1", "1111...1", "..11..1.", "...1...."],
   mute: ["...1....", "..11....", "1111.1.1", "1111..1.", "1111..1.", "1111.1.1", "..11....", "...1...."],
-  gear: ["...11...", ".1.11.1.", "..1111..", "111..111", "111..111", "..1111..", ".1.11.1.", "...11..."],
+  gear: [".....11.....", ".11.1111.11.", ".1111111111.", "..11111111..", ".1111..1111.", "1111....1111", "1111....1111", ".1111..1111.", "..11111111..", ".1111111111.", ".11.1111.11.", ".....11....."],
+  fuse: ["..1....1", ".121..1.", "1111.1..", ".11.1...", "...1.11.", "..1.1111", ".1..121.", "1....1.."],
   lock: ["..111...", ".1...1..", ".1...1..", "1111111.", "1112111.", "1113111.", "1111111.", "........"],
   dice: ["1111111.", "1.11111.", "1111111.", "111.111.", "1111111.", "11111.1.", "1111111.", "........"]
 };
@@ -329,7 +352,8 @@ function sprite(name, size = 24) {
     if (ch === "2") r += `<rect x="${x}" y="${y}" width="1" height="1" fill="#fff" fill-opacity=".55"/>`;
     if (ch === "3") r += `<rect x="${x}" y="${y}" width="1" height="1" fill="#000" fill-opacity=".35"/>`;
   }));
-  return `<svg class="spr" viewBox="0 0 8 8" width="${size}" height="${size}" aria-hidden="true">${r}</svg>`;
+  const w = MAPS[name][0].length, h = MAPS[name].length;
+  return `<svg class="spr" viewBox="0 0 ${w} ${h}" width="${size}" height="${size}" aria-hidden="true">${r}</svg>`;
 }
 
 /* ---------- prefs (per viewer) ---------- */
@@ -355,17 +379,27 @@ const sfx = (() => {
     if (ctx.state === "suspended") ctx.resume().catch(() => {});
     return ctx;
   };
+  const waves = {};
+  /* NES-style pulse wave with a given duty cycle (12.5 % / 25 %) built from Fourier terms */
+  function pulse(c, duty) {
+    if (waves[duty]) return waves[duty];
+    const N = 48, re = new Float32Array(N), im = new Float32Array(N);
+    for (let n = 1; n < N; n++) re[n] = (2 / (n * Math.PI)) * Math.sin(n * Math.PI * duty);
+    return (waves[duty] = c.createPeriodicWave(re, im));
+  }
   function beep(f, at, dur, type = "square", v = 0.02, f2) {
     const c = ctx; if (!pref.sound || !c || c.state !== "running" || pref.vol <= 0) return;
     const t = c.currentTime + at, o = c.createOscillator(), g = c.createGain();
-    o.type = type; o.frequency.setValueAtTime(f, t); if (f2) o.frequency.exponentialRampToValueAtTime(f2, t + dur);
+    if (type === "p12" || type === "p25") o.setPeriodicWave(pulse(c, type === "p12" ? 0.125 : 0.25)); else o.type = type;
+    o.frequency.setValueAtTime(f, t); if (f2) o.frequency.exponentialRampToValueAtTime(f2, t + dur);
     g.gain.setValueAtTime(v * pref.vol, t); g.gain.setValueAtTime(v * pref.vol, t + dur * 0.6); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
     o.connect(g).connect(c.destination); o.start(t); o.stop(t + dur + 0.02);
   }
   return {
     unlock() { if (pref.sound) ready(); },
-    hover() { const n = performance.now(); if (n - lastHover < 70) return; lastHover = n; beep(1250, 0, 0.03, "square", 0.008); },
-    click() { ready(); beep(660, 0, 0.04); beep(990, 0.04, 0.05); },
+    hover(kind) { const n = performance.now(); if (n - lastHover < 60) return; lastHover = n; const b = kind === "chip" ? 1568 : kind === "reel" ? 880 : 1175; beep(b, 0, 0.028, "p12", 0.02); beep(b * 1.5, 0.03, 0.03, "p12", 0.016); },
+    click() { ready(); beep(784, 0, 0.035, "p25", 0.024); beep(1175, 0.035, 0.06, "p25", 0.022); },
+    fuse() { ready(); [262, 330, 392, 523, 659, 784, 1047].forEach((f, i) => beep(f, i * 0.05, 0.07, "p25", 0.02)); [523, 659, 784].forEach(f => beep(f, 0.4, 0.45, "p12", 0.014)); beep(110, 0.38, 0.3, "triangle", 0.09, 55); },
     tab() { ready(); [523.25, 659.25, 783.99].forEach((f, i) => beep(f, i * 0.045, 0.07, "triangle", 0.07)); },
     coin() { ready(); beep(987.77, 0, 0.07, "square", 0.022); beep(1318.5, 0.07, 0.32, "square", 0.022); },
     drop() { ready(); beep(700, 0, 0.2, "square", 0.018, 200); },
@@ -382,8 +416,8 @@ document.addEventListener("pointerdown", () => sfx.unlock(), { capture: true });
 document.addEventListener("keydown", () => sfx.unlock(), { capture: true });
 document.addEventListener("pointerover", (e) => {
   if (e.pointerType && e.pointerType !== "mouse") return;
-  const t = e.target.closest && e.target.closest(".pbtn, .qbtn, .x");
-  if (t && !(e.relatedTarget && t.contains(e.relatedTarget))) sfx.hover();
+  const t = e.target.closest && e.target.closest(".pbtn, .qbtn, .x, .reel, .monster, .slot");
+  if (t && !(e.relatedTarget && t.contains(e.relatedTarget))) sfx.hover(t.classList.contains("chip") ? "chip" : t.classList.contains("reel") || t.classList.contains("slot") ? "reel" : "");
 });
 
 /* ---------- state + helpers ---------- */
@@ -482,23 +516,23 @@ const GENRES = [
   { n: "Стелс", s: "Пробираешься незаметно: свет, шум и обзор врагов решают всё.", p: "Новые гаджеты и всё более охраняемые места; {res} тратишь на снаряжение.", len: "миссия 15 минут" }
 ];
 const MECHS = [
-  { n: "Коллекционные карточки", d: "Собираешь карточки {allies} и {enemies}, составляешь колоду и выставляешь её на бой. Бой идёт сам — ты решаешь порядок карт и усиления.", loop: ["Открой пак карточек за {res}", "Собери колоду из 8 карт", "Выставь колоду на бой и забери награду"] },
-  { n: "Опасная кухня", d: "Готовишь блюда из опасных ингредиентов ({items}) и кормишь ими {enemies}. Угадал рецепт — враг становится союзником, ошибся — блюдо взрывается.", loop: ["Добудь ингредиенты {place}", "Смешай рецепт на плите", "Накорми врага и посмотри, что будет"] },
-  { n: "Оборона базы", d: "Днём укрепляешь базу {place} и расставляешь {allies}, ночью отбиваешь волну — {enemiesN} идут со всех сторон.", loop: ["Собери {res} днём", "Построй стены и ловушки", "Переживи ночную волну"] },
-  { n: "Приручение врагов", d: "Ослабляешь {enemies} в бою и приручаешь — побеждённые становятся твоим отрядом со своими умениями.", loop: ["Найди редкого противника", "Ослабь и приручи его", "Возьми его в следующий бой"] },
-  { n: "Торговая лавка", d: "Держишь лавку {place}: скупаешь товар ({items}) подешевле, продаёшь дороже и торгуешься с покупателями — среди них бывают и {enemiesN}.", loop: ["Закупи товар", "Выставь цены и поторгуйся", "Вложи {res} в расширение лавки"] },
-  { n: "Слияние предметов", d: "На поле 6×6 соединяешь три одинаковых предмета в один сильнее: из мусора ({items}) собираешь оружие против {enemies}.", loop: ["Получи новые предметы", "Сливай тройки в одно", "Брось лучшее в бой"] },
-  { n: "Отряд на клетках", d: "Ведёшь отряд {allies} по клеткам; каждый ход видно, куда ударят {enemiesN}, и ты успеваешь увести бойцов или подставить врагов друг под друга.", loop: ["Расставь отряд", "Ходите по очереди", "Забери трофеи и вылечи раненых"] },
-  { n: "Стрельба против орды", d: "{heroCap} стреляет сам — ты только двигаешься и выбираешь улучшения, пока на тебя идут сотни {enemies}.", loop: ["Двигайся и уворачивайся", "Подбирай опыт с поверженных", "Выбери одно улучшение из трёх"] },
-  { n: "Перемотка времени", d: "Любую ошибку можно отмотать на 5 секунд назад, но {enemiesN} помнят, что было, и в следующий раз готовятся заранее.", loop: ["Попробуй пройти участок", "Отмотай и измени план", "Используй знание будущего"] },
-  { n: "Ограбление", d: "Тайком действуешь {place}: крадёшь {res} так, чтобы тебя не заметили {enemiesN}. Можно отвлекать шумом, прятаться в тени и подкупать охрану.", loop: ["Изучи план места", "Проберись и укради", "Уйди до тревоги"] },
-  { n: "Поселение", d: "Управляешь поселением {allies}: раздаёшь работу, строишь дома и мастерские, а каждые несколько дней приходят {enemiesN}.", loop: ["Распредели работу", "Строй и улучшай", "Отбей набег"] },
-  { n: "Бой в ритм музыки", d: "Атакуешь и уклоняешься в такт музыке; {enemiesN} тоже двигаются под бит, а точное попадание в долю удваивает урон.", loop: ["Послушай рисунок ритма", "Бей точно в долю", "Собери длинное комбо"] },
-  { n: "Расследование", d: "Ищешь улики {place}, допрашиваешь {allies} и выясняешь, кто стоит за нападениями: {enemiesN} — лишь исполнители.", loop: ["Осмотри место", "Сопоставь улики", "Обвини и проверь версию"] },
-  { n: "Доставка на время", d: "Развозишь груз ({items}) по точкам на время, срезаешь путь и уходишь от погони — {enemiesN} охотятся за грузом.", loop: ["Возьми заказ", "Проложи маршрут", "Доставь и получи {res}"] },
-  { n: "Ферма днём, бой ночью", d: "Днём выращиваешь урожай и готовишь припасы, ночью защищаешь грядки — {enemiesN} приходят за едой.", loop: ["Посади и полей", "Собери урожай", "Защити грядки ночью"] },
-  { n: "Фабрика-кликер", d: "Добываешь {res} вручную, нанимаешь {allies} и строишь машины, чтобы всё работало само.", loop: ["Добывай руками", "Автоматизируй добычу", "Сбрось прогресс ради новой механики"] },
-  { n: "Только ловушки", d: "Ты не можешь атаковать напрямую — только строить ловушки и заманивать в них {enemies}. Лучшие победы — цепные реакции.", loop: ["Изучи маршруты врагов", "Поставь ловушки", "Заманивай и смотри на цепную реакцию"] }
+  { n: "Коллекционные карточки", adj: ["карточный","карточная","карточное","карточные"], noun: "карточки", g: "pl", act: "собираешь колоду из карточек", rule: "Бой идёт сам — решают состав колоды и порядок карт.", ex: "ты открываешь пак и достаёшь редкую карту", then: "становится новой картой в колоде", d: "Собираешь карточки {allies} и {enemies}, составляешь колоду и выставляешь её на бой. Бой идёт сам — ты решаешь порядок карт и усиления.", loop: ["Открой пак карточек за {res}", "Собери колоду из 8 карт", "Выставь колоду на бой и забери награду"] },
+  { n: "Опасная кухня", adj: ["кулинарный","кулинарная","кулинарное","кулинарные"], noun: "кухня", g: "f", act: "готовишь блюда из опасных ингредиентов", rule: "Угаданный рецепт превращает врага в союзника, ошибка — взрыв.", ex: "ты бросаешь в котёл светящийся гриб", then: "превращается в ингредиент для блюда", d: "Готовишь блюда из опасных ингредиентов ({items}) и кормишь ими {enemies}. Угадал рецепт — враг становится союзником, ошибся — блюдо взрывается.", loop: ["Добудь ингредиенты {place}", "Смешай рецепт на плите", "Накорми врага и посмотри, что будет"] },
+  { n: "Оборона базы", adj: ["оборонный","оборонная","оборонное","оборонные"], noun: "оборона", g: "f", act: "строишь укрепления и отбиваешь ночные волны", rule: "Днём готовишься, ночью выживаешь.", ex: "ты ставишь стену у входа", then: "укрепляет базу перед ночной волной", d: "Днём укрепляешь базу {place} и расставляешь {allies}, ночью отбиваешь волну — {enemiesN} идут со всех сторон.", loop: ["Собери {res} днём", "Построй стены и ловушки", "Переживи ночную волну"] },
+  { n: "Приручение врагов", adj: ["звериный","звериная","звериное","звериные"], noun: "приручение", g: "n", act: "ослабляешь врагов и приручаешь их", rule: "Побеждённый враг становится бойцом со своими умениями.", ex: "ты приручаешь редкого монстра", then: "приводит в отряд нового бойца", d: "Ослабляешь {enemies} в бою и приручаешь — побеждённые становятся твоим отрядом со своими умениями.", loop: ["Найди редкого противника", "Ослабь и приручи его", "Возьми его в следующий бой"] },
+  { n: "Торговая лавка", adj: ["торговый","торговая","торговое","торговые"], noun: "лавка", g: "f", act: "покупаешь дешевле и продаёшь дороже", rule: "Цены живые: спрос меняется от твоих сделок.", ex: "ты продаёшь товар втридорога", then: "приносит деньги в кассу лавки", d: "Держишь лавку {place}: скупаешь товар ({items}) подешевле, продаёшь дороже и торгуешься с покупателями — среди них бывают и {enemiesN}.", loop: ["Закупи товар", "Выставь цены и поторгуйся", "Вложи {res} в расширение лавки"] },
+  { n: "Слияние предметов", adj: ["составной","составная","составное","составные"], noun: "слияние", g: "n", act: "сливаешь три одинаковых предмета в один сильнее", rule: "Три одинаковых — один новый, сильнее.", ex: "ты сливаешь три ржавых гвоздя в меч", then: "сливается с похожими в предмет сильнее", d: "На поле 6×6 соединяешь три одинаковых предмета в один сильнее: из мусора ({items}) собираешь оружие против {enemies}.", loop: ["Получи новые предметы", "Сливай тройки в одно", "Брось лучшее в бой"] },
+  { n: "Отряд на клетках", adj: ["тактический","тактическая","тактическое","тактические"], noun: "тактика", g: "f", act: "ведёшь отряд по клеткам и заранее видишь ходы врагов", rule: "Ход за ходом, а намерения врагов видны заранее.", ex: "ты переставляешь бойца на соседнюю клетку", then: "сдвигает бойца на поле боя", d: "Ведёшь отряд {allies} по клеткам; каждый ход видно, куда ударят {enemiesN}, и ты успеваешь увести бойцов или подставить врагов друг под друга.", loop: ["Расставь отряд", "Ходите по очереди", "Забери трофеи и вылечи раненых"] },
+  { n: "Стрельба против орды", adj: ["стрелковый","стрелковая","стрелковое","стрелковые"], noun: "стрельба", g: "f", act: "уворачиваешься от орды, пока герой стреляет сам", rule: "Ты только двигаешься и выбираешь улучшения.", ex: "ты уворачиваешься от сотни врагов", then: "даёт опыт на новое улучшение", d: "{heroCap} стреляет сам — ты только двигаешься и выбираешь улучшения, пока на тебя идут сотни {enemies}.", loop: ["Двигайся и уворачивайся", "Подбирай опыт с поверженных", "Выбери одно улучшение из трёх"] },
+  { n: "Перемотка времени", adj: ["временной","временная","временное","временные"], noun: "перемотка", g: "f", act: "отматываешь ошибки на 5 секунд назад", rule: "Ошибку можно отменить, но враги помнят прошлое.", ex: "ты отматываешь неудачный ход", then: "даёт вторую попытку, но враги её запоминают", d: "Любую ошибку можно отмотать на 5 секунд назад, но {enemiesN} помнят, что было, и в следующий раз готовятся заранее.", loop: ["Попробуй пройти участок", "Отмотай и измени план", "Используй знание будущего"] },
+  { n: "Ограбление", adj: ["воровской","воровская","воровское","воровские"], noun: "кража", g: "f", act: "тайком пробираешься и крадёшь", rule: "Шум и свет выдают тебя.", ex: "ты незаметно крадёшь ключ", then: "добавляет добычу, но поднимает тревогу", d: "Тайком действуешь {place}: крадёшь {res} так, чтобы тебя не заметили {enemiesN}. Можно отвлекать шумом, прятаться в тени и подкупать охрану.", loop: ["Изучи план места", "Проберись и укради", "Уйди до тревоги"] },
+  { n: "Поселение", adj: ["общинный","общинная","общинное","общинные"], noun: "поселение", g: "n", act: "распределяешь работу между жителями и строишь", rule: "Каждый житель занят делом, а набеги приходят по расписанию.", ex: "ты отправляешь жителя в мастерскую", then: "даёт поселению новые руки и постройки", d: "Управляешь поселением {allies}: раздаёшь работу, строишь дома и мастерские, а каждые несколько дней приходят {enemiesN}.", loop: ["Распредели работу", "Строй и улучшай", "Отбей набег"] },
+  { n: "Бой в ритм музыки", adj: ["ритмичный","ритмичная","ритмичное","ритмичные"], noun: "ритм", g: "m", act: "действуешь в такт музыке", rule: "Точно в долю — двойной эффект.", ex: "ты попадаешь точно в бит", then: "срабатывает дважды, если попал в долю", d: "Атакуешь и уклоняешься в такт музыке; {enemiesN} тоже двигаются под бит, а точное попадание в долю удваивает урон.", loop: ["Послушай рисунок ритма", "Бей точно в долю", "Собери длинное комбо"] },
+  { n: "Расследование", adj: ["детективный","детективная","детективное","детективные"], noun: "расследование", g: "n", act: "собираешь улики и проверяешь версии", rule: "Ошибочное обвинение стоит дорого.", ex: "ты находишь подозрительную улику", then: "становится уликой в деле", d: "Ищешь улики {place}, допрашиваешь {allies} и выясняешь, кто стоит за нападениями: {enemiesN} — лишь исполнители.", loop: ["Осмотри место", "Сопоставь улики", "Обвини и проверь версию"] },
+  { n: "Доставка на время", adj: ["курьерский","курьерская","курьерское","курьерские"], noun: "доставка", g: "f", act: "развозишь грузы на время, уходя от погони", rule: "Таймер тикает, а за грузом охотятся.", ex: "ты успеваешь доставить посылку", then: "превращается в заказ, который надо успеть доставить", d: "Развозишь груз ({items}) по точкам на время, срезаешь путь и уходишь от погони — {enemiesN} охотятся за грузом.", loop: ["Возьми заказ", "Проложи маршрут", "Доставь и получи {res}"] },
+  { n: "Ферма днём, бой ночью", adj: ["фермерский","фермерская","фермерское","фермерские"], noun: "ферма", g: "f", act: "растишь урожай днём и защищаешь его ночью", rule: "Урожай кормит тебя, но ночью его хотят съесть.", ex: "ты собираешь урожай", then: "прорастает на грядке и созревает к утру", d: "Днём выращиваешь урожай и готовишь припасы, ночью защищаешь грядки — {enemiesN} приходят за едой.", loop: ["Посади и полей", "Собери урожай", "Защити грядки ночью"] },
+  { n: "Фабрика-кликер", adj: ["заводской","заводская","заводское","заводские"], noun: "фабрика", g: "f", act: "добываешь руками, а потом автоматизируешь", rule: "То, что делал руками, потом делают машины.", ex: "ты строишь новую машину", then: "уходит на конвейер и начинает работать само", d: "Добываешь {res} вручную, нанимаешь {allies} и строишь машины, чтобы всё работало само.", loop: ["Добывай руками", "Автоматизируй добычу", "Сбрось прогресс ради новой механики"] },
+  { n: "Только ловушки", adj: ["ловчий","ловчая","ловчее","ловчие"], noun: "ловушки", g: "pl", act: "строишь ловушки и заманиваешь в них врагов", rule: "Атаковать напрямую нельзя — только хитростью.", ex: "ты заманиваешь врага в капкан", then: "запускает цепную реакцию ловушек", d: "Ты не можешь атаковать напрямую — только строить ловушки и заманивать в них {enemies}. Лучшие победы — цепные реакции.", loop: ["Изучи маршруты врагов", "Поставь ловушки", "Заманивай и смотри на цепную реакцию"] }
 ];
 const SETTINGS = [
   { n: "Киберпанк", hero: "хакер-курьер", allies: "наёмников и уличных хакеров", enemies: "киборгов корпорации", enemiesN: "киборги корпорации", place: "в неоновых трущобах мегаполиса", items: "просроченные импланты, нестабильные батареи, пиратские чипы", res: "кредиты", vibe: "Неон, дождь и корпорации, которым принадлежит всё." },
@@ -574,17 +608,106 @@ function choose(k, v) {
   sfx.click(); renderReels(); renderPick();
   if (G.locks.every(Boolean)) { G.ai = null; G.aiText = ""; makeResult(); renderGenOut(); sfx.jingle(); $("genOut").scrollIntoView({ behavior: pref.motion ? "smooth" : "auto", block: "nearest" }); }
 }
+/* ---------- fusing two mechanics into a new one ---------- */
+const HOOKS = ["Ошибка в одной половине аукается в другой.", "Сильная сборка в первой части открывает короткий путь во второй.", "Игрок сам решает, где рисковать, — и это меняет концовку.", "Обе части идут одновременно: пока занят одним, другое не ждёт.", "Чем лучше получается одно, тем сложнее становится другое.", "Редкий результат первой части открывает секретный вариант второй."];
+const FU = { a: null, b: null, res: null, ai: null, aiText: "", aiErr: "", anim: false };
+const BASE_MECHS = MECHS.slice();
+const lcFirst = (s) => s ? s[0].toLowerCase() + s.slice(1) : s;
+function fuseName(A, B) { return cap(A.adj[{ m: 0, f: 1, n: 2, pl: 3 }[B.g]] + " " + B.noun); }
+function doFuse() {
+  if (FU.anim) return;
+  const pool = BASE_MECHS.map(m => m.n);
+  if (!FU.a) FU.a = pick(pool.filter(n => n !== FU.b));
+  if (!FU.b) FU.b = pick(pool.filter(n => n !== FU.a));
+  const A = BASE_MECHS.find(m => m.n === FU.a), B = BASE_MECHS.find(m => m.n === FU.b);
+  FU.res = { name: fuseName(A, B), A, B, how: "Ты " + A.act + " — и всё, что получилось, идёт во вторую часть игры, где ты " + B.act + ".", ex: cap(A.ex) + " — и это сразу " + B.then + ".", rules: [A.rule, B.rule], hook: pick(HOOKS) };
+  FU.ai = null; FU.aiText = "";
+  sfx.fuse();
+  const finish = () => { FU.anim = false; renderFuse(true); };
+  if (!pref.motion) { finish(); return; }
+  FU.anim = true; renderFuse(); $("fuseRow").classList.add("go"); setTimeout(finish, 520);
+}
+function fuseText() {
+  const r = FU.res; if (!r) return "";
+  return ["Новая механика: " + r.name + " («" + r.A.n + "» + «" + r.B.n + "»)", "Как работает: " + r.how, "Пример: " + r.ex, "Правила: " + r.rules.join(" "), "Новое: " + r.hook, ...(FU.aiText ? ["", "Claude:", FU.aiText] : [])].join("\n");
+}
+function sendToGenerator() {
+  const r = FU.res; if (!r) return;
+  if (!MECHS.some(m => m.n === r.name)) MECHS.push({ n: r.name, fused: true, d: r.how + " " + r.rules.join(" "), loop: [r.A.loop[0], r.B.loop[1], r.B.loop[2]] });
+  G.vals[1] = r.name; G.locks[1] = true; sfx.coin(); renderReels(); renderPick();
+  if (G.locks.every(Boolean)) { G.ai = null; G.aiText = ""; makeResult(); renderGenOut(); }
+  $("gen").scrollIntoView({ behavior: pref.motion ? "smooth" : "auto", block: "start" });
+}
+async function fuseClaude() {
+  if (!sampleFn || !FU.res || FU.ai === "loading") return;
+  sfx.open(); FU.ai = "loading"; FU.aiText = ""; renderFuse();
+  const prompt = "Ты геймдизайнер инди-игр. Скрести две игровые механики 2D-игр в одну новую, узнаваемую, но свежую:\n\n" + fuseText()
+    + "\n\nОтветь по-русски, простым текстом без Markdown и без звёздочек, до 200 слов. Короткие заголовки на отдельных строках: Название; Как работает (что игрок делает каждую минуту); Пример сцены; Почему это свежо; На какие известные игры похоже и чем отличается; В каких жанрах сработает; Прототип за вечер.";
+  try {
+    const res = await sampleFn(prompt, { onText: ({ text }) => { FU.aiText = text; const n = document.querySelector("#fuseOut .ai-text"); if (n) { n.textContent = text; n.classList.remove("loading"); } } });
+    FU.aiText = res.text; FU.ai = "done"; sfx.jingle();
+  } catch (e) {
+    if (e && e.code === "not_granted") { sampleFn = null; FU.ai = null; }
+    else { FU.ai = "error"; FU.aiErr = e && e.code === "rate_limited" ? "Слишком много запросов. Попробуйте через минуту." : "Не получилось спросить Claude. Попробуйте позже."; }
+  }
+  renderFuse();
+}
+function renderFuse(fresh) {
+  $("fuseIcon").innerHTML = sprite("fuse", 22);
+  const row = $("fuseRow"); row.classList.remove("go"); row.replaceChildren();
+  const slot = (k, label) => {
+    const v = FU[k], b = el("button", "reel px slot" + (v ? "" : " empty")); b.type = "button";
+    b.append(el("span", "lbl", label), el("span", "val", v || "выберите ниже или случайно"));
+    b.setAttribute("aria-label", label + ": " + (v || "не выбрана") + (v ? ". Нажмите, чтобы убрать" : ""));
+    b.onclick = () => { if (!v || FU.anim) return; FU[k] = null; sfx.drop(); renderFuse(); };
+    return b;
+  };
+  row.append(slot("a", "Механика 1"), el("span", "op", "+"), slot("b", "Механика 2"));
+  const go = el("button", "pbtn px spin-btn", FU.a && FU.b ? "Скрестить!" : "Случайно!"); go.type = "button"; go.onclick = doFuse; row.append(go);
+  const chips = $("fuseChips"); chips.replaceChildren();
+  BASE_MECHS.forEach(m => {
+    const which = FU.a === m.n ? "1" : FU.b === m.n ? "2" : "";
+    const b = el("button", "pbtn px chip"); b.type = "button"; b.setAttribute("aria-pressed", String(!!which)); b.append(m.n);
+    if (which) b.append(el("i", "tagab", which));
+    b.onclick = () => { if (FU.anim) return; if (FU.a === m.n) FU.a = null; else if (FU.b === m.n) FU.b = null; else if (!FU.a) FU.a = m.n; else FU.b = m.n; sfx.click(); renderFuse(); };
+    chips.append(b);
+  });
+  const out = $("fuseOut"); out.replaceChildren();
+  const r = FU.res;
+  if (!r) { out.append(el("p", "hint", "Например: «Опасная кухня» + «Коллекционные карточки» = «Кулинарные карточки»: ингредиенты превращаются в карты.")); return; }
+  const d = el("div", "dialog px" + (fresh && pref.motion ? " flash-in" : "")); d.append(el("span", "who", "Новая механика"), el("h3", null, r.name));
+  d.append(el("p", "pitch", "«" + r.A.n + "» + «" + r.B.n + "»"));
+  const dl = el("dl");
+  [["Как работает", r.how], ["Пример", r.ex], ["Правила", r.rules], ["Что нового", r.hook]].forEach(([k, v]) => {
+    const dd = el("dd"); if (Array.isArray(v)) { const ul = el("ul"); v.forEach(x => ul.append(el("li", null, x))); dd.append(ul); } else dd.textContent = v;
+    dl.append(el("dt", null, k), dd);
+  });
+  d.append(dl);
+  if (FU.ai) {
+    const ai = el("div", "dialog px"); ai.style.marginTop = "26px"; ai.append(el("span", "who", "Claude"));
+    if (FU.ai === "error") ai.append(el("p", "hint", FU.aiErr)); else ai.append(el("p", "ai-text" + (FU.ai === "loading" && !FU.aiText ? " loading" : ""), FU.aiText || "Claude думает"));
+    d.append(ai);
+  }
+  const acts = el("div", "gen-actions");
+  const use = el("button", "pbtn px", "В генератор игр"); use.type = "button"; use.onclick = sendToGenerator; acts.append(use);
+  const again = el("button", "pbtn px", "Другая пара"); again.type = "button"; again.onclick = () => { FU.a = null; FU.b = null; doFuse(); }; acts.append(again);
+  if (sampleFn) { const imp = el("button", "pbtn px", FU.ai === "loading" ? "Claude пишет…" : "Расписать с Claude"); imp.type = "button"; imp.disabled = FU.ai === "loading"; imp.onclick = fuseClaude; acts.append(imp); }
+  const cp = el("button", "pbtn px", "Копировать"); cp.type = "button";
+  cp.onclick = async () => { try { await navigator.clipboard.writeText(fuseText()); cp.textContent = "Скопировано"; sfx.jingle(); } catch {} };
+  acts.append(cp); d.append(acts); out.append(d);
+}
+
 function renderPick() {
   const box = $("genPick"); box.replaceChildren();
   box.append(el("h3", null, "Собрать самому"), el("p", "hint", "Выберите жанр, механику и сеттинг. Выбранное закрепляется на барабане; если выбрать все три, игра соберётся сразу, а пустые барабаны докрутит «Крутить!»."));
   const st = dbStems();
-  const lists = [GENRES.map(g => [g.n, st.has(stem(g.n))]), MECHS.map(m => [m.n, false]), SETTINGS.map(s => [s.n, false])];
+  const lists = [GENRES.map(g => [g.n, st.has(stem(g.n)) && "БАЗА"]), MECHS.map(m => [m.n, m.fused && "МИКС"]), SETTINGS.map(s => [s.n, false])];
   REELS.forEach(([label], k) => {
     const r = el("div", "ingr-row"); r.append(el("span", null, label));
     const c = el("div", "chips");
     lists[k].forEach(([name, db]) => {
       const b = el("button", "pbtn px chip"); b.type = "button"; b.setAttribute("aria-pressed", String(G.locks[k] && G.vals[k] === name));
-      b.append(name); if (db) { const m = el("b", null, "БАЗА"); m.title = "Жанр есть в играх из базы"; b.append(m); }
+      b.append(name); if (db) { const m = el("b", null, db); m.title = db === "БАЗА" ? "Жанр есть в играх из базы" : "Механика из скрещивания"; b.append(m); }
       b.onclick = () => choose(k, name); c.append(b);
     });
     r.append(c); box.append(r);
@@ -827,12 +950,12 @@ $("sndBtn").onclick = () => { pref.sound = !pref.sound; savePref(); renderSnd();
 let qTimer; $("q").addEventListener("input", e => { clearTimeout(qTimer); qTimer = setTimeout(() => { state.q = e.target.value.trim(); state.animate = false; renderTabs(); renderList(); }, 120); });
 $("copyBtn").onclick = async () => { try { await navigator.clipboard.writeText($("phraseText").textContent); $("copyBtn").textContent = "Скопировано"; sfx.jingle(); } catch { const r = document.createRange(); r.selectNodeContents($("phraseText")); const s = getSelection(); s.removeAllRanges(); s.addRange(r); } };
 
-renderSnd(); renderGenHead(); renderReels(); renderGenOut(); renderPick(); renderAll();
+renderSnd(); renderGenHead(); renderReels(); renderGenOut(); renderPick(); renderFuse(); renderAll();
 (async () => {
   const c = window.claude; const db = c ? await c.use("db") : null;
   if (!db) { $("list").replaceChildren(el("div", "empty px", "База недоступна в этом окне. Откройте страницу на claude.ai, войдя в аккаунт.")); return; }
   state.db = db;
-  c.use("sample").then(s => { if (s) { sampleFn = s; renderGenOut(); } }).catch(() => {});
+  c.use("sample").then(s => { if (s) { sampleFn = s; renderGenOut(); renderFuse(); } }).catch(() => {});
   const user = await c.use("user"); const cw = user ? await user.can("data.write") : null; state.canWrite = cw !== false;
   const t = setTimeout(() => { if (!state.insights.length) $("list").replaceChildren(el("div", "empty px", "База пока не загрузилась. Проверьте соединение: страница обновится сама.")); }, 10000);
   let first = true;
