@@ -21,10 +21,10 @@
   --like: #9be05a; --dislike: #f0b86a; --request: #7fd8c0; --take: #f2f08a; --scan: rgba(0,0,0,.2); }
 :root[data-pal="sunset"] { --bg: #1a0b2e; --surface: #271345; --surface-2: #341a5c; --line: #5a2f8f; --shadow: #0a0414;
   --ink: #fff0fb; --ink-2: #cfb3e6; --accent: #ff7edb; --on-c: #1a0b2e; --dlg: #10061e; --dlg-line: #ff7edb;
-  --like: #72f1b8; --dislike: #fe4450; --request: #36f9f6; --take: #fede5d; }
+  --like: #72f1b8; --dislike: #ff6b78; --request: #36f9f6; --take: #fede5d; }
 :root[data-pal="cart"] { --bg: #e6e0d2; --surface: #f8f4ea; --surface-2: #ece5d4; --line: #2b2a33; --shadow: #2b2a33;
-  --ink: #1d1c22; --ink-2: #55525e; --accent: #c2185b; --on-c: #ffffff; --dlg: #ffffff; --dlg-line: #2b2a33;
-  --like: #2e7d32; --dislike: #c62828; --request: #1565c0; --take: #8d6200; --scan: rgba(0,0,0,.05); color-scheme: light; }
+  --ink: #1d1c22; --ink-2: #4f4c58; --accent: #a8124f; --on-c: #ffffff; --dlg: #ffffff; --dlg-line: #2b2a33;
+  --like: #1b5e20; --dislike: #b71c1c; --request: #0d47a1; --take: #6d4c00; --scan: rgba(0,0,0,.05); color-scheme: light; }
 :root[data-size="s"] { font-size: 15px; }
 :root[data-size="m"] { font-size: 17px; }
 :root[data-size="l"] { font-size: 19px; }
@@ -225,6 +225,51 @@ dialog.zoom .x { position: absolute; top: 22px; right: 22px; background: var(--d
 .pbtn.hot2[disabled] { opacity: 1; filter: saturate(.7); cursor: default; }
 .pbtn[disabled] { opacity: .6; cursor: default; }
 .spin-btn .spr { width: 22px; height: 22px; }
+/* readable idea card */
+.idea { padding: 26px 24px 20px; }
+.idea-body { display: grid; gap: 18px; }
+.idea-title { margin: 0 !important; font: 400 clamp(16px, 2.4vw, 22px)/1.5 var(--f-pixel) !important; color: var(--take); }
+.title-en { display: block; margin-top: -12px; font: 600 1rem var(--f-head); color: var(--ink-2); letter-spacing: .04em; }
+.idea-tags { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.itag { padding: 4px 10px; font: 600 .88rem var(--f-head); background: var(--surface-2); color: var(--ink); box-shadow: inset 0 -3px 0 var(--c, var(--line)); }
+.t-genre { --c: var(--request); } .t-mech { --c: var(--accent); } .t-set { --c: var(--like); }
+.iplus { font: 400 12px var(--f-pixel); color: var(--accent); }
+.idea-vibe { margin: -6px 0 0; font-style: italic; color: var(--ink-2); }
+h4.sec { margin: 0 0 10px; font: 400 10px/1.6 var(--f-pixel); letter-spacing: .06em; color: var(--accent); }
+.idea-core { padding: 16px 18px; background: color-mix(in srgb, var(--accent) 9%, var(--surface)); border-left: 5px solid var(--accent); }
+.core-hero { margin: 0 0 8px; color: var(--ink-2); font-weight: 500; }
+.core-main { margin: 0; font-size: 1.12rem; line-height: 1.6; font-weight: 500; }
+.core-ex { margin: 12px 0 0; padding: 10px 12px; background: var(--dlg); }
+.core-ex b { color: var(--take); }
+.core-mechs { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin-top: 14px; }
+.core-mech { display: grid; gap: 4px; padding: 10px 12px; background: var(--surface-2); font-size: .95rem; line-height: 1.55; }
+.core-mech b { color: var(--accent); font: 600 .95rem var(--f-head); }
+.loop { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 10px; }
+.loop li { display: flex; align-items: center; gap: 10px; padding: 8px 12px 8px 8px; background: var(--surface-2); font-weight: 500; }
+.loop li:not(:last-child)::after { content: "→"; margin-left: 6px; color: var(--accent); font-weight: 700; }
+.step-n { display: grid; place-items: center; width: 26px; height: 26px; flex: none; background: var(--accent); color: var(--on-c); font: 400 10px var(--f-pixel); }
+.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
+.fact { display: grid; gap: 4px; align-content: start; padding: 12px 14px; background: var(--surface-2); line-height: 1.55; }
+.fact-k { font: 600 .78rem var(--f-head); letter-spacing: .1em; text-transform: uppercase; color: var(--ink-2); }
+.idea-reviews { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
+.rv { padding: 12px 14px; background: var(--surface-2); border-left: 5px solid var(--c); }
+.rv ul { margin: 6px 0 0; padding-left: 18px; line-height: 1.55; }
+.rv-use { --c: var(--like); } .rv-avoid { --c: var(--dislike); }
+.rv-use .fact-k { color: var(--like); } .rv-avoid .fact-k { color: var(--dislike); }
+.proto { margin: 0; padding: 12px 14px; border: 2px dashed var(--take); }
+.proto b { color: var(--take); }
+.ai-box { margin-top: 22px; padding: 16px 18px; background: var(--surface); border-left: 5px solid var(--request); }
+.ai-box h4.sec { color: var(--request); }
+.ai-text { display: grid; gap: 6px; white-space: normal; line-height: 1.6; }
+.ai-text h5 { margin: 10px 0 0; font: 700 .98rem var(--f-head); color: var(--take); }
+.ai-text h5:first-child { margin-top: 0; }
+.ai-text p { margin: 0; }
+.ai-li { padding-left: 4px; }
+.trash { margin: 0 14px 16px; }
+.trash > summary { cursor: pointer; color: var(--ink-2); font: 600 .9rem var(--f-head); min-height: 36px; display: flex; align-items: center; }
+dialog.ask { width: min(440px, calc(100vw - 32px)); background: var(--surface); color: var(--ink); padding: 22px; }
+dialog.ask::backdrop { background: rgba(0,0,0,.6); }
+dialog.ask #askText { margin: 0 0 6px; font: 600 1.05rem var(--f-head); }
 .gen-pick h3 { margin: 0; font: 400 12px/1.6 var(--f-pixel); color: var(--accent); }
 .hint { margin: 0; color: var(--ink-2); font-size: .92rem; }
 
@@ -392,6 +437,7 @@ dialog.set::backdrop { background: rgba(0,0,0,.6); }
   <div class="field"><span>Громкость</span><input type="range" id="vol" min="0" max="1.5" step="0.05" aria-label="Громкость"></div>
 </dialog>
 <dialog class="zoom px" id="zoomDlg" aria-label="Картинка крупно"></dialog>
+<dialog class="ask px" id="askDlg" aria-labelledby="askText"><p id="askText"></p><p class="hint" id="askHint"></p><div class="gen-actions"><button class="pbtn px hot" type="button" id="askOk">Удалить</button><button class="pbtn px" type="button" id="askNo">Отмена</button></div></dialog>
 
 <script>
 /* ---------- pixel sprites: 8x8 maps, 1 = colour, 2 = highlight, 3 = shade ---------- */
@@ -512,13 +558,14 @@ const TABS = [["like", "Нравится", "--like", ["like"], "heart", "Что 
   ["dislike", "Не нравится", "--dislike", ["dislike"], "broken", "За что ставят минус"],
   ["request", "Просят", "--request", ["request", "idea"], "bubble", "Просьбы и идеи игроков"],
   ["takeaway", "Выводы", "--take", ["takeaway"], "star", "Что взять в свою игру"]];
-const state = { games: [], insights: [], parts: [], game: "all", q: "", tab: store.get("rb2.tab") || "like", open: new Set(), typed: new Set(), db: null, canWrite: false, animate: true };
+const state = { games: [], gamesAll: [], insights: [], insightsAll: [], parts: [], game: "all", q: "", tab: store.get("rb2.tab") || "like", open: new Set(), typed: new Set(), db: null, canWrite: false, animate: true };
 if (!TABS.some(t => t[0] === state.tab)) state.tab = "like";
 const $ = (id) => document.getElementById(id);
 const el = (t, c, txt) => { const n = document.createElement(t); if (c) n.className = c; if (txt != null) n.textContent = txt; return n; };
 const html = (t, c, h) => { const n = el(t, c); n.innerHTML = h; return n; };
 const gameName = (id) => (state.games.find(g => g.id === id) || {}).name || id;
-const scoped = () => state.insights.filter(i => state.game === "all" || i.game === state.game);
+const liveGame = (id) => !state.gamesAll.length || state.games.some(g => g.id === id);
+const scoped = () => state.insights.filter(i => liveGame(i.game) && (state.game === "all" || i.game === state.game));
 const taken = (i) => i.forMyGame === "use" || i.forMyGame === "avoid" || i.forMyGame === "maybe";
 const tabOf = (i) => TABS.find(t => t[3].includes(i.type)) || TABS[0];
 const plural = (n, a, b, c) => { const m = n % 10, h = n % 100; return n + " " + (m === 1 && h !== 11 ? a : m >= 2 && m <= 4 && (h < 10 || h >= 20) ? b : c); };
@@ -812,19 +859,12 @@ function renderGenOut(fresh) {
   const box = $("genOut"); box.replaceChildren();
   const S = G.result;
   if (!S) { box.append(el("p", "hint", "Нажмите «Крутить!» или соберите игру сами — ниже.")); renderIdeas(); return; }
-  const d = el("div", "dialog px" + (fresh && pref.motion ? " flash-in" : "")); d.append(el("span", "who", S.fusedFlag ? "Идея игры · скрещено" : "Идея игры"));
-  const h = el("h3", null, S.title); h.append(el("span", "title-en", " / " + S.titleEn)); d.append(h);
-  d.append(el("p", "pitch", S.pitch));
-  const dl = el("dl");
-  S.rows.forEach(([k, v]) => {
-    const dd = el("dd");
-    if (Array.isArray(v)) { const l = el(k.startsWith("Игровой") ? "ol" : "ul"); v.forEach(x => l.append(el("li", null, x))); dd.append(l); } else dd.textContent = v;
-    dl.append(el("dt", null, k), dd);
-  });
-  d.append(dl);
+  const d = el("div", "dialog px idea" + (fresh && pref.motion ? " flash-in" : "")); d.append(el("span", "who", S.fusedFlag ? "Идея игры · скрещено" : "Идея игры"));
+  d.append(ideaBody(S));
   if (G.ai) {
-    const ai = el("div", "dialog px"); ai.style.marginTop = "26px"; ai.append(el("span", "who", "Claude"));
-    if (G.ai === "error") ai.append(el("p", "hint", G.aiErr)); else ai.append(el("p", "ai-text" + (G.ai === "loading" && !G.aiText ? " loading" : ""), G.aiText || "Claude думает"));
+    const ai = el("section", "ai-box"); ai.append(el("h4", "sec", "Подробно от Claude"));
+    if (G.ai === "error") ai.append(el("p", "hint", G.aiErr));
+    else { const b = el("div", "ai-text" + (G.ai === "loading" && !G.aiText ? " loading" : "")); if (G.aiText) b.append(...fmtAI(G.aiText)); else b.textContent = "Claude думает"; ai.append(b); }
     d.append(ai);
   }
   d.append(el("div", "shots-box"));
@@ -840,6 +880,64 @@ function renderGenOut(fresh) {
   if (G.ai || IMG.items.length) renderShots();
   renderIdeas();
 }
+/* idea layout: title → tags → the core (what you do) → loop as steps → facts grid → reviews → prototype */
+function ideaBody(S) {
+  const R = Object.fromEntries(S.rows.map(([k, v]) => [k, v]));
+  const get = (pref) => { const e = S.rows.find(([k]) => k.startsWith(pref)); return e ? e : null; };
+  const wrap = el("div", "idea-body");
+  const h = el("h3", "idea-title", S.title); const en = el("span", "title-en", S.titleEn || ""); wrap.append(h, en);
+  const tags = el("div", "idea-tags"); const [gn, m1, m2, sn] = S.vals || [];
+  const tag = (txt, cls) => { if (txt) tags.append(el("span", "itag " + cls, txt)); };
+  tag(gn, "t-genre"); tag(m1, "t-mech"); if (m2) { tags.append(el("span", "iplus", "+")); tag(m2, "t-mech"); } tag(sn, "t-set");
+  wrap.append(tags);
+  const vibe = (S.pitch || "").split(/»\.\s*/).pop(); if (vibe && vibe !== S.pitch) wrap.append(el("p", "idea-vibe", vibe));
+  const core = el("section", "idea-core");
+  core.append(el("h4", "sec", "Суть игры"));
+  if (R["Герой"]) core.append(el("p", "core-hero", "Ты играешь за: " + R["Герой"].toLowerCase()));
+  const link = R["Как они связаны"];
+  if (link) {
+    const [how, ex] = link.split(" Пример: ");
+    core.append(el("p", "core-main", how));
+    if (ex) { const p = el("p", "core-ex"); p.append(el("b", null, "Пример: "), document.createTextNode(ex)); core.append(p); }
+    const mm = el("div", "core-mechs");
+    [get("Механика 1"), get("Механика 2")].filter(Boolean).forEach(([k, v]) => { const c = el("div", "core-mech"); c.append(el("b", null, k.replace(/^Механика \d: /, "")), el("span", null, v)); mm.append(c); });
+    core.append(mm);
+  } else if (R["Что делаешь"]) core.append(el("p", "core-main", R["Что делаешь"]));
+  wrap.append(core);
+  const loop = R["Игровой цикл"];
+  if (Array.isArray(loop)) {
+    const sec = el("section", "idea-sec"); sec.append(el("h4", "sec", "Игровой цикл"));
+    const ol = el("ol", "loop"); loop.forEach((x, i) => { const li = el("li"); li.append(el("span", "step-n", String(i + 1)), el("span", null, x)); ol.append(li); });
+    sec.append(ol); wrap.append(sec);
+  }
+  const facts = el("div", "facts");
+  [["Как устроена игра", "Как устроена"], ["Прогрессия", "Прогрессия"], ["Твист", "Твист"], ["Что нового", "Что нового"], ["Длина", "Длина партии"], ["Референсы", "Референсы"]].forEach(([k, label]) => {
+    if (!R[k]) return; const f = el("div", "fact"); f.append(el("span", "fact-k", label), el("span", "fact-v", R[k])); facts.append(f);
+  });
+  wrap.append(facts);
+  const use = get("Учесть"), avoid = get("Избежать");
+  if (use || avoid) {
+    const rv = el("div", "idea-reviews");
+    [[use, "rv-use", "Учесть из отзывов"], [avoid, "rv-avoid", "Избежать"]].forEach(([e, cls, label]) => { if (!e) return; const b = el("div", "rv " + cls); b.append(el("span", "fact-k", label)); const ul = el("ul"); (Array.isArray(e[1]) ? e[1] : [e[1]]).forEach(x => ul.append(el("li", null, x))); b.append(ul); rv.append(b); });
+    wrap.append(rv);
+  }
+  if (R["Прототип"]) { const p = el("p", "proto"); p.append(el("b", null, "Первый прототип: "), document.createTextNode(R["Прототип"])); wrap.append(p); }
+  return wrap;
+}
+/* Claude's plain-text answer → short headings and paragraphs */
+function fmtAI(text) {
+  const out = [];
+  String(text).split(/\n+/).map(x => x.trim()).filter(Boolean).forEach((line, i, all) => {
+    line = line.replace(/^[*#\s]+|\*+$/g, "");
+    if (/^Название:/i.test(line)) return;
+    const m = line.match(/^([А-ЯЁA-Z][^:]{1,48}):\s*(.*)$/);
+    if (m && !/[.!?]$/.test(m[1])) { out.push(el("h5", null, m[1])); if (m[2]) out.push(el("p", null, m[2])); return; }
+    if (line.length < 48 && !/[.!?:;,]$/.test(line) && i < all.length - 1) { out.push(el("h5", null, line)); return; }
+    if (/^([-•–]|\d+[.)])\s+/.test(line)) { out.push(el("p", "ai-li", line.replace(/^[-•–]\s+/, "• "))); return; }
+    out.push(el("p", null, line));
+  });
+  return out;
+}
 async function improve() {
   if (!sampleFn || !G.result || G.ai === "loading") return;
   sfx.open(); G.ai = "loading"; G.aiText = ""; renderGenOut();
@@ -847,7 +945,7 @@ async function improve() {
     + "\n\nДоработай его в полноценный концепт игры." + (G.result.fusedFlag ? " Две механики должны сплестись в одну новую, узнаваемую, но свежую — объясни, как именно они работают вместе." : "")
     + " Ответь по-русски, простым текстом без Markdown и без звёздочек, до 280 слов. Первая строка строго в формате «Название: Русское Название / English Title», в каждом варианте не больше двух слов. Дальше короткие заголовки на отдельных строках: Суть (2 предложения); Герой и мир; Что игрок делает каждую минуту (конкретно, с примером одной сцены); Игровой цикл; Прогрессия; Три типа врагов или препятствий; На какие игры похоже и чем отличается; Финал игры; Что взяли из отзывов (если есть); Прототип за выходные.";
   try {
-    const res = await sampleFn(prompt, { onText: ({ text }) => { G.aiText = text; const n = document.querySelector("#genOut .ai-text"); if (n) { n.textContent = text; n.classList.remove("loading"); } } });
+    const res = await sampleFn(prompt, { onText: ({ text }) => { G.aiText = text; const n = document.querySelector("#genOut .ai-text"); if (n) { n.replaceChildren(...fmtAI(text)); n.classList.remove("loading"); } } });
     G.aiText = res.text; G.ai = "done"; sfx.jingle();
     const m = G.aiText.match(/Название:\s*([^\n/]+)\/\s*([^\n]+)/);
     const two = (x) => x.trim().replace(/[«»"]/g, "").split(/\s+/).slice(0, 2).join(" ");
@@ -861,9 +959,25 @@ async function improve() {
   renderGenOut();
 }
 
+/* ---------- confirmation: window.confirm() is blocked in the artifact frame, so ask in our own dialog ---------- */
+function ask(text, hint, ok = "Удалить") {
+  return new Promise(res => {
+    const d = $("askDlg"); $("askText").textContent = text; $("askHint").textContent = hint || ""; $("askOk").textContent = ok;
+    const done = (v) => { d.close(); res(v); };
+    $("askOk").onclick = () => done(true); $("askNo").onclick = () => done(false);
+    d.oncancel = (e) => { e.preventDefault(); done(false); };
+    sfx.open(); d.showModal(); $("askNo").focus();
+  });
+}
+const SOFT = "Запись останется в базе — её можно вернуть из корзины.";
+async function softDelete(col, id, on) {
+  try { await state.db.doc(col + "/" + id).update(on ? { deleted: true, deletedAt: new Date().toISOString() } : { deleted: false }); on ? sfx.drop() : sfx.coin(); return true; }
+  catch { return false; }
+}
+
 /* ---------- saved ideas (db collection "ideas"); images live in the artifact's asset store ---------- */
 let assetsApi = null;
-const IDEAS = { list: [], openList: true };
+const IDEAS = { list: [], trash: [], openList: true };
 function ideaDoc() {
   return { snap: G.result, ai: G.ai === "done" ? G.aiText : "", title: G.result.title, titleEn: G.result.titleEn,
     images: IMG.items.filter(i => i.asset || i.webUrl).map(i => ({ title: i.title, prompt: i.prompt, webUrl: i.webUrl || "", asset: i.asset || "" })) };
@@ -900,10 +1014,16 @@ function renderIdeas() {
     if (img0) { const im = el("img"); im.alt = ""; im.loading = "lazy"; im.src = assetUrl(img0.asset); b.append(im); } else b.append(html("span", "idea-ph", sprite("dice", 32)));
     const t = el("span", "idea-t"); t.append(el("b", null, it.title), el("small", null, it.titleEn || ""), el("small", "idea-v", (it.snap && it.snap.vals || []).filter(Boolean).join(" · ")));
     b.append(t); b.onclick = () => openIdea(it); c.append(b);
-    if (state.canWrite) { const x = el("button", "x", "✕"); x.type = "button"; x.setAttribute("aria-label", "Удалить идею «" + it.title + "»"); x.onclick = async () => { if (!confirm("Удалить идею «" + it.title + "»?")) return; try { await state.db.doc("ideas/" + it.id).delete(); if (G.savedId === it.id) G.savedId = null; sfx.drop(); } catch {} }; c.append(x); }
+    if (state.canWrite) { const x = el("button", "x", "✕"); x.type = "button"; x.title = "Удалить"; x.setAttribute("aria-label", "Удалить идею «" + it.title + "»"); x.onclick = async () => { if (!(await ask("Удалить идею «" + it.title + "»?", SOFT))) return; if (await softDelete("ideas", it.id, true) && G.savedId === it.id) { G.savedId = null; renderGenOut(); } }; c.append(x); }
     grid.append(c);
   });
-  d.append(grid); box.append(d);
+  d.append(grid);
+  if (IDEAS.trash.length) {
+    const tr = el("details", "trash"); const ts = el("summary", null, "Корзина: " + plural(IDEAS.trash.length, "идея", "идеи", "идей")); tr.append(ts);
+    const ul = el("ul", "mine-list"); IDEAS.trash.forEach(it => { const li = el("li"); li.append(el("b", null, "Идея"), el("span", null, it.title + (it.titleEn ? " / " + it.titleEn : ""))); const r = el("button", "qbtn", "Вернуть"); r.type = "button"; r.onclick = () => softDelete("ideas", it.id, false); li.append(r); ul.append(li); });
+    tr.append(ul); d.append(tr);
+  }
+  box.append(d);
 }
 
 /* ---------- two gameplay reference images: Claude writes the prompts, Magnific (viewer's connector) draws them ---------- */
@@ -1049,7 +1169,7 @@ function mergeParts() {
   };
   [["genre", GENRES], ["mech", MECHS], ["set", SETTINGS]].forEach(([k, arr]) => {
     const seen = new Set(BASE[k].map(b => b.n.toLowerCase())), extra = [];
-    state.parts.filter(p => p.kind === k && p.n).forEach(p => { const key = String(p.n).toLowerCase(); if (seen.has(key)) return; seen.add(key); extra.push({ ...conv[k](p), custom: true, src: p.src || "", pid: p.id }); });
+    state.parts.filter(p => p.kind === k && p.n && !p.deleted).forEach(p => { const key = String(p.n).toLowerCase(); if (seen.has(key)) return; seen.add(key); extra.push({ ...conv[k](p), custom: true, src: p.src || "", pid: p.id }); });
     arr.splice(0, arr.length, ...BASE[k], ...extra);
   });
 }
@@ -1177,18 +1297,19 @@ function renderShop() {
   ], async (v) => { await savePart("set", v); return "Сеттинг «" + v.n + "» добавлен в конструктор."; }));
   if (t === "ref") body.append(renderRef());
   if (t === "mine") {
-    const mine = state.parts.slice().sort((a, b) => String(b.addedAt || "").localeCompare(String(a.addedAt || "")));
-    if (!mine.length) body.append(el("p", "hint", "Пока ничего не добавлено."));
-    else {
-      const ul = el("ul", "mine-list");
-      mine.forEach(p => {
-        const li = el("li"); li.append(el("b", null, { genre: "Жанр", mech: "Механика", set: "Сеттинг" }[p.kind] || p.kind), el("span", null, p.n + (p.src ? " · из «" + gameName(p.src) + "»" : "")));
-        const x = el("button", "x", "✕"); x.type = "button"; x.setAttribute("aria-label", "Удалить «" + p.n + "»");
-        x.onclick = async () => { if (!confirm("Удалить «" + p.n + "» из конструктора?")) return; try { await state.db.doc("parts/" + p.id).delete(); sfx.drop(); } catch { SHOP.msg = "Не удалось удалить."; renderShopMsg(); } };
-        li.append(x); ul.append(li);
-      });
-      body.append(ul);
-    }
+    const KIND = { genre: "Жанр", mech: "Механика", set: "Сеттинг" };
+    const rows = [...state.gamesAll.map(g => ({ col: "games", id: g.id, kind: "Игра", name: g.name, extra: "", deleted: !!g.deleted, at: g.analyzedAt || "" })),
+      ...state.parts.map(p => ({ col: "parts", id: p.id, kind: KIND[p.kind] || p.kind, name: p.n, extra: p.src ? " · из «" + gameName(p.src) + "»" : "", deleted: !!p.deleted, at: p.addedAt || "" }))];
+    const live = rows.filter(r => !r.deleted), gone = rows.filter(r => r.deleted);
+    const list = (arr, restore) => { const ul = el("ul", "mine-list"); arr.forEach(r => {
+      const li = el("li"); li.append(el("b", null, r.kind), el("span", null, r.name + r.extra));
+      if (restore) { const b = el("button", "qbtn", "Вернуть"); b.type = "button"; b.onclick = async () => { if (await softDelete(r.col, r.id, false)) { SHOP.msg = "«" + r.name + "» возвращено."; renderShop(); } }; li.append(b); }
+      else { const x = el("button", "x", "✕"); x.type = "button"; x.title = "Удалить"; x.setAttribute("aria-label", "Удалить «" + r.name + "»");
+        x.onclick = async () => { if (!(await ask("Удалить «" + r.name + "» из конструктора?", r.col === "games" ? "Игра и её отзывы пропадут со страницы, но останутся в базе — их можно вернуть." : SOFT))) return; if (await softDelete(r.col, r.id, true)) { SHOP.msg = "«" + r.name + "» удалено. Вернуть можно ниже, в корзине."; renderShop(); } else { SHOP.msg = "Не удалось удалить."; renderShopMsg(); } };
+        li.append(x); }
+      ul.append(li); }); return ul; };
+    body.append(live.length ? list(live, false) : el("p", "hint", "Пока ничего не добавлено."));
+    if (gone.length) { const tr = el("details", "trash"); tr.append(el("summary", null, "Корзина: " + gone.length), list(gone, true)); body.append(tr); }
   }
   body.append(msg);
 }
@@ -1401,13 +1522,13 @@ $("bankIcon").innerHTML = sprite("heart", 20);
   c.use("sample").then(s => { if (s) { sampleFn = s; renderGenOut(); } }).catch(() => {});
   c.use("mcp").then(m => { mcpApi = m || null; }).catch(() => {});
   c.use("assets").then(a => { assetsApi = a || null; }).catch(() => {});
-  db.collection("ideas").onSnapshot(s => { IDEAS.list = s.docs.map(d => ({ id: d.id, ...d.data() })).filter(x => x.snap).sort((a, b) => String(b.createdAt || "").localeCompare(String(a.createdAt || ""))); renderIdeas(); }, () => {});
+  db.collection("ideas").onSnapshot(s => { const all = s.docs.map(d => ({ id: d.id, ...d.data() })).filter(x => x.snap).sort((a, b) => String(b.createdAt || "").localeCompare(String(a.createdAt || ""))); IDEAS.list = all.filter(x => !x.deleted); IDEAS.trash = all.filter(x => x.deleted); renderIdeas(); }, () => {});
   const user = await c.use("user"); const cw = user ? await user.can("data.write") : null; state.canWrite = cw !== false;
   renderShop();
   const t = setTimeout(() => { if (!state.insights.length) $("list").replaceChildren(el("div", "empty px", "База пока не загрузилась. Проверьте соединение: страница обновится сама.")); }, 10000);
   let first = true;
-  db.collection("games").onSnapshot(s => { state.games = s.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => String(b.analyzedAt || "").localeCompare(String(a.analyzedAt || ""))); renderAll(); }, () => {});
+  db.collection("games").onSnapshot(s => { const all = s.docs.map(d => ({ id: d.id, ...d.data() })); state.gamesAll = all; state.games = all.filter(g => !g.deleted).sort((a, b) => String(b.analyzedAt || "").localeCompare(String(a.analyzedAt || ""))); renderAll(); }, () => {});
   db.collection("parts").onSnapshot(s => { state.parts = s.docs.map(d => ({ id: d.id, ...d.data() })); mergeParts(); renderPick(); if (SHOP.tab === "mine") renderShop(); }, () => {});
-  db.collection("insights").onSnapshot(s => { clearTimeout(t); state.insights = s.docs.map(d => ({ id: d.id, ...d.data() })); state.animate = first; first = false; renderAll(); }, () => clearTimeout(t));
+  db.collection("insights").onSnapshot(s => { clearTimeout(t); state.insightsAll = s.docs.map(d => ({ id: d.id, ...d.data() })); state.insights = state.insightsAll.filter(i => !i.deleted); state.animate = first; first = false; renderAll(); }, () => clearTimeout(t));
 })();
 </script>
