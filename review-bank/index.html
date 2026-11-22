@@ -195,7 +195,7 @@ h1 { font: 400 clamp(22px, 4.6vw, 40px)/1.35 var(--f-pixel); margin: 10px 0 0; l
 .shot-links { display: flex; flex-wrap: wrap; gap: 4px 16px; align-items: center; }
 .shot-links a { color: var(--request); font: 600 .86rem var(--f-head); }
 .title-en { color: var(--ink-2); font-size: .8em; }
-.ideas { margin-top: 16px; background: var(--surface-2); }
+.ideas { background: var(--surface-2); }
 .ideas > summary { cursor: pointer; list-style: none; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; min-height: 52px; padding: 10px 14px; }
 .ideas > summary::-webkit-details-marker { display: none; }
 .ideas > summary::before { content: "▸"; color: var(--accent); font: 400 12px var(--f-pixel); }
@@ -218,6 +218,13 @@ dialog.zoom::backdrop { background: rgba(0,0,0,.75); }
 dialog.zoom img { display: block; width: 100%; height: auto; }
 dialog.zoom p { margin: 10px 0 0; }
 dialog.zoom .x { position: absolute; top: 22px; right: 22px; background: var(--dlg); z-index: 1; }
+.pbtn.hot { background: var(--accent); color: var(--on-c); --pl: var(--accent); }
+.pbtn.hot2 { background: var(--take); color: var(--on-c); --pl: var(--take); }
+.pbtn.hot:hover, .pbtn.hot2:hover { filter: brightness(1.12); background: var(--accent); }
+.pbtn.hot2:hover { background: var(--take); }
+.pbtn.hot2[disabled] { opacity: 1; filter: saturate(.7); cursor: default; }
+.pbtn[disabled] { opacity: .6; cursor: default; }
+.spin-btn .spr { width: 22px; height: 22px; }
 .gen-pick h3 { margin: 0; font: 400 12px/1.6 var(--f-pixel); color: var(--accent); }
 .hint { margin: 0; color: var(--ink-2); font-size: .92rem; }
 
@@ -347,9 +354,9 @@ dialog.set::backdrop { background: rgba(0,0,0,.6); }
       <h2 id="genTitle"><span id="genIcon"></span>Сборка игры</h2>
       <p>Жанр + механика + ещё одна механика + сеттинг = идея 2D-игры. Две механики скрещиваются в новую. Нажмите на барабан, чтобы закрепить значение.</p>
     </div>
+    <div id="ideasBox"></div>
     <div class="reels" id="reels"></div>
     <div class="gen-out" id="genOut"></div>
-    <div id="ideasBox"></div>
     <div class="gen-pick" id="genPick"></div>
     <details class="ingr" id="ingr"><summary id="ingrSum"></summary><div class="ingr-body" id="ingrBody"></div></details>
   </section>
@@ -689,7 +696,7 @@ function renderReels() {
     box.append(r);
     if (k === 1) box.append(el("span", "op", "+"));
   });
-  const s = el("button", "pbtn px spin-btn", "Крутить!"); s.type = "button"; s.id = "spinBtn"; s.onclick = spin; box.append(s);
+  const s = el("button", "pbtn px spin-btn"); s.type = "button"; s.id = "spinBtn"; s.innerHTML = sprite("dice", 22); s.append(el("span", null, "Крутить!")); s.onclick = spin; box.append(s);
 }
 function spin() {
   if (G.spinning) return; G.spinning = true; G.ai = null; G.aiText = ""; sfx.click();
@@ -781,11 +788,11 @@ function makeResult() {
 function snapOf(r, title, titleEn) {
   const rows = [["Герой", cap(r.st.hero)]];
   if (r.B) {
-    rows.push(["Механика 1: " + r.A.n, fill(r.A.d, r.st)], ["Механика 2: " + r.B.n, fill(r.B.d, r.st)],
+    rows.push(["Механика 1: " + r.A.n, cap(fill(r.A.d, r.st))], ["Механика 2: " + r.B.n, cap(fill(r.B.d, r.st))],
       ["Как они связаны", "Ты " + r.A.act + " — и всё, что получилось, идёт в дело, где ты " + r.B.act + ". Пример: " + r.A.ex + " — и это сразу " + r.B.then + "."],
       ["Игровой цикл", [r.A.loop[0], r.A.loop[1], r.B.loop[1], r.B.loop[2]].map(x => fill(x, r.st))], ["Что нового", r.hook]);
-  } else rows.push(["Что делаешь", fill(r.A.d, r.st)], ["Игровой цикл", r.A.loop.map(x => fill(x, r.st))]);
-  rows.push(["Как устроена игра", r.g.s], ["Прогрессия", fill(r.g.p, r.st)], ["Твист", r.twist], ["Длина", r.g.len]);
+  } else rows.push(["Что делаешь", cap(fill(r.A.d, r.st))], ["Игровой цикл", r.A.loop.map(x => fill(x, r.st))]);
+  rows.push(["Как устроена игра", r.g.s], ["Прогрессия", fill(r.g.p, r.st)], ["Твист", cap(r.twist)], ["Длина", r.g.len]);
   const refs = [...new Set([r.g, r.A, r.B, r.st].filter(x => x && x.src).map(x => gameName(x.src)))];
   if (refs.length) rows.push(["Референсы", refs.join(", ")]);
   r.rb.use.length && rows.push(["Учесть" + (r.rb.auto ? " (из отзывов)" : ""), r.rb.use.map(i => i.text)]);
@@ -822,9 +829,10 @@ function renderGenOut(fresh) {
   }
   d.append(el("div", "shots-box"));
   const acts = el("div", "gen-actions");
-  const again = el("button", "pbtn px", "Ещё раз"); again.type = "button"; again.onclick = spin; acts.append(again);
+  if (sampleFn) { const hasImg = IMG.items.some(i => i.img || i.webUrl); const vz = el("button", "pbtn px hot", IMG.status === "work" ? "Рисую…" : hasImg ? "Перерисовать картинки" : "Визуализировать"); vz.type = "button"; vz.disabled = IMG.status === "work"; vz.onclick = visualize; acts.append(vz); }
+  if (state.db && state.canWrite) { const sv = el("button", "pbtn px hot2", G.savedId ? "★ Сохранено" : "☆ Сохранить идею"); sv.type = "button"; sv.disabled = !!G.savedId; sv.onclick = () => saveIdea(true); acts.append(sv); }
   if (sampleFn) { const imp = el("button", "pbtn px", G.ai === "loading" ? "Claude пишет…" : G.ai === "done" ? "Расписать заново" : "Расписать подробно с Claude"); imp.type = "button"; imp.disabled = G.ai === "loading"; imp.onclick = improve; acts.append(imp); }
-  if (state.db && state.canWrite) { const sv = el("button", "pbtn px", G.savedId ? "★ Сохранено" : "☆ Сохранить идею"); sv.type = "button"; sv.disabled = !!G.savedId && G.ai !== "done"; sv.onclick = () => saveIdea(true); acts.append(sv); }
+  const again = el("button", "pbtn px", "Ещё раз"); again.type = "button"; again.onclick = spin; acts.append(again);
   const cp = el("button", "pbtn px", "Копировать"); cp.type = "button";
   cp.onclick = async () => { try { await navigator.clipboard.writeText(resultText()); cp.textContent = "Скопировано"; sfx.jingle(); } catch {} };
   acts.append(cp); d.append(acts);
@@ -834,7 +842,7 @@ function renderGenOut(fresh) {
 }
 async function improve() {
   if (!sampleFn || !G.result || G.ai === "loading") return;
-  sfx.open(); G.ai = "loading"; G.aiText = ""; IMG.status = ""; IMG.items = []; IMG.key = ""; renderGenOut();
+  sfx.open(); G.ai = "loading"; G.aiText = ""; renderGenOut();
   const prompt = "Ты геймдизайнер инди-игр. Вот черновик идеи 2D-игры для соло-разработчика:\n\n" + resultText()
     + "\n\nДоработай его в полноценный концепт игры." + (G.result.fusedFlag ? " Две механики должны сплестись в одну новую, узнаваемую, но свежую — объясни, как именно они работают вместе." : "")
     + " Ответь по-русски, простым текстом без Markdown и без звёздочек, до 280 слов. Первая строка строго в формате «Название: Русское Название / English Title», в каждом варианте не больше двух слов. Дальше короткие заголовки на отдельных строках: Суть (2 предложения); Герой и мир; Что игрок делает каждую минуту (конкретно, с примером одной сцены); Игровой цикл; Прогрессия; Три типа врагов или препятствий; На какие игры похоже и чем отличается; Финал игры; Что взяли из отзывов (если есть); Прототип за выходные.";
@@ -844,7 +852,8 @@ async function improve() {
     const m = G.aiText.match(/Название:\s*([^\n/]+)\/\s*([^\n]+)/);
     const two = (x) => x.trim().replace(/[«»"]/g, "").split(/\s+/).slice(0, 2).join(" ");
     if (m) { G.result.title = cap(two(m[1])); G.result.titleEn = two(m[2]); }
-    renderGenOut(); await saveIdea(false); genImages();
+    renderGenOut(); await saveIdea(false);
+    if (IMG.status !== "work" && !IMG.items.some(i => i.img || i.webUrl)) genImages();
   } catch (e) {
     if (e && e.code === "not_granted") { sampleFn = null; G.ai = null; }
     else { G.ai = "error"; G.aiErr = e && e.code === "rate_limited" ? "Слишком много запросов. Попробуйте через минуту." : "Не получилось спросить Claude. Попробуйте позже."; }
@@ -854,7 +863,7 @@ async function improve() {
 
 /* ---------- saved ideas (db collection "ideas"); images live in the artifact's asset store ---------- */
 let assetsApi = null;
-const IDEAS = { list: [], openList: false };
+const IDEAS = { list: [], openList: true };
 function ideaDoc() {
   return { snap: G.result, ai: G.ai === "done" ? G.aiText : "", title: G.result.title, titleEn: G.result.titleEn,
     images: IMG.items.filter(i => i.asset || i.webUrl).map(i => ({ title: i.title, prompt: i.prompt, webUrl: i.webUrl || "", asset: i.asset || "" })) };
@@ -910,6 +919,13 @@ async function fetchToAsset(it) {
   if (assetsApi) { try { const a = await assetsApi.upload(blob); it.asset = a.id; it.img = a.url || assetUrl(a.id); return; } catch {} }
   it.img = URL.createObjectURL(blob);
 }
+async function visualize() {
+  if (!G.result || IMG.status === "work") return;
+  sfx.click();
+  if (state.db && state.canWrite && !G.savedId) await saveIdea(false);
+  await genImages();
+  renderGenOut();
+}
 async function genImages() {
   const S = G.result; if (!S || !sampleFn || IMG.status === "work") return;
   const key = uid("k"), ideaId = G.savedId;
@@ -955,6 +971,7 @@ async function genImages() {
   renderShots();
 }
 function renderShots() {
+  const vz = document.querySelector("#genOut .gen-actions .hot"); if (vz) { const hasImg = IMG.items.some(i => i.img || i.webUrl); vz.textContent = IMG.status === "work" ? "Рисую…" : hasImg ? "Перерисовать картинки" : "Визуализировать"; vz.disabled = IMG.status === "work"; }
   const box = document.querySelector("#genOut .shots-box"); if (!box) return;
   box.replaceChildren();
   if (!IMG.status && !IMG.items.length) return;
