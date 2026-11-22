@@ -1,0 +1,173 @@
+<title>Банк отзывов</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@500;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Layout: title + game chips -> "take into my game" list -> four short columns (liked / disliked / asked / takeaways), top 5 each, quotes on demand. Data lives in db. */
+:root {
+  --bg: #f4f2ee; --surface: #ffffff; --surface-2: #efece6; --line: #dcd6cc;
+  --ink: #1c1a17; --ink-2: #5f5a52; --accent: #c2410c;
+  --like: #15803d; --dislike: #b91c1c; --request: #1d4ed8; --take: #a16207;
+  --f-display: "Rubik", "Segoe UI", system-ui, sans-serif;
+  --f-body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #15130f; --surface: #1e1b16; --surface-2: #27231c; --line: #3a342a;
+  --ink: #f3eee6; --ink-2: #b3aa9b; --accent: #fb923c;
+  --like: #4ade80; --dislike: #f87171; --request: #60a5fa; --take: #facc15; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #15130f; --surface: #1e1b16; --surface-2: #27231c; --line: #3a342a;
+  --ink: #f3eee6; --ink-2: #b3aa9b; --accent: #fb923c;
+  --like: #4ade80; --dislike: #f87171; --request: #60a5fa; --take: #facc15; color-scheme: dark }
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font: 15px/1.5 var(--f-body); }
+.wrap { max-width: 1180px; margin: 0 auto; padding-block: 28px 72px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 22px; }
+button, input { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.kicker { font: 700 11px var(--f-mono); letter-spacing: .14em; text-transform: uppercase; color: var(--accent); }
+h1 { font: 800 clamp(30px, 5vw, 46px)/1 var(--f-display); margin: 4px 0 0; letter-spacing: -.02em; }
+.lead { margin: 8px 0 0; color: var(--ink-2); max-width: 62ch; }
+.bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.game { display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 6px 12px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); cursor: pointer; font-weight: 600; }
+.game small { font: 700 12px var(--f-mono); color: var(--like); }
+.game[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.game[aria-pressed="true"] small { color: inherit; }
+.search { flex: 1 1 220px; max-width: 320px; min-height: 40px; padding: 8px 12px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); }
+.summary { margin: 0; padding: 12px 16px; border-left: 3px solid var(--accent); background: var(--surface); border-radius: 0 10px 10px 0; color: var(--ink-2); font-size: 14px; }
+.mine { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; display: grid; gap: 8px; }
+.mine h2, .col h2 { font: 700 12px var(--f-mono); letter-spacing: .12em; text-transform: uppercase; margin: 0; display: flex; align-items: center; gap: 8px; }
+.mine h2 { color: var(--like); }
+.mine ul { margin: 0; padding-left: 20px; display: grid; gap: 4px; }
+.mine li span { color: var(--ink-2); font-size: 13px; }
+.mine p { margin: 0; color: var(--ink-2); font-size: 14px; }
+.cols { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; align-items: start; }
+@media (max-width: 980px) { .cols { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 560px) { .cols { grid-template-columns: 1fr; } }
+.col { --c: var(--ink-2); background: var(--surface); border: 1px solid var(--line); border-top: 3px solid var(--c); border-radius: 12px; padding: 12px 12px 8px; display: grid; gap: 6px; min-width: 0; }
+.col h2 { color: var(--c); }
+.col h2 b { font: 700 12px var(--f-mono); color: var(--ink-2); }
+.row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px; padding: 8px 4px; border-top: 1px solid var(--line); }
+.row:first-of-type { border-top: 0; }
+.row-text { all: unset; cursor: pointer; font-size: 14px; line-height: 1.4; }
+.row-text:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+.row-meta { display: flex; flex-wrap: wrap; gap: 2px 8px; align-items: center; margin-top: 3px; font: 600 11px var(--f-mono); color: var(--ink-2); }
+.row-meta span { white-space: nowrap; }
+.row .quotes { grid-column: 1 / -1; display: grid; gap: 6px; margin: 2px 0 2px 2px; }
+.row blockquote { margin: 0; padding-left: 8px; border-left: 2px solid var(--line); font-size: 13px; color: var(--ink-2); }
+.row blockquote a { color: inherit; }
+.tick { width: 30px; height: 30px; border-radius: 8px; border: 1px solid var(--line); background: transparent; cursor: pointer; display: grid; place-items: center; color: transparent; }
+.tick:hover { border-color: var(--like); }
+.tick[aria-pressed="true"] { background: var(--like); border-color: var(--like); color: var(--bg); }
+.tick svg { width: 16px; height: 16px; }
+.more { all: unset; cursor: pointer; font: 600 13px var(--f-body); color: var(--accent); padding: 6px 4px; }
+.empty { padding: 20px; border: 1px dashed var(--line); border-radius: 12px; color: var(--ink-2); }
+.foot { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 14px; color: var(--ink-2); }
+.phrase { display: inline-flex; align-items: center; gap: 8px; font: 500 13px var(--f-mono); background: var(--surface-2); padding: 5px 6px 5px 10px; border-radius: 8px; color: var(--ink); }
+.phrase button { min-height: 28px; padding: 2px 10px; border-radius: 6px; border: 1px solid var(--line); background: var(--surface); cursor: pointer; font: 600 12px var(--f-body); white-space: nowrap; }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="kicker">База знаний для моей 2D-игры</div>
+    <h1>Банк отзывов</h1>
+    <p class="lead">Главное из отзывов Steam о похожих играх. Отмечайте галочкой то, что стоит учесть в своей игре.</p>
+  </header>
+
+  <div class="bar"><div class="bar" id="games" aria-label="Игры"></div><input class="search" id="q" type="search" placeholder="Поиск" aria-label="Поиск по выводам"></div>
+  <p class="summary" id="summary" hidden></p>
+
+  <section class="mine" id="mine"></section>
+  <div class="cols" id="cols"><div class="empty">Загружаю базу…</div></div>
+
+  <footer class="foot">Добавить игру: напишите Claude <span class="phrase"><span id="phraseText">Разбери отзывы игры НАЗВАНИЕ в банк отзывов</span><button type="button" id="copyBtn">Копировать</button></span></footer>
+</div>
+
+<script>
+/* ideas from players count as "asked for" so there are four columns */
+const COLS = [["like", "Нравится", "--like", ["like"]], ["dislike", "Не нравится", "--dislike", ["dislike"]], ["request", "Просят", "--request", ["request", "idea"]], ["takeaway", "Выводы", "--take", ["takeaway"]]];
+const TOP = 5;
+const state = { games: [], insights: [], game: "all", q: "", open: new Set(), expanded: new Set(), db: null, canWrite: false };
+const $ = (id) => document.getElementById(id);
+const el = (t, c, txt) => { const n = document.createElement(t); if (c) n.className = c; if (txt != null) n.textContent = txt; return n; };
+const gameName = (id) => (state.games.find(g => g.id === id) || {}).name || id;
+const CHECK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>';
+const scoped = () => state.insights.filter(i => state.game === "all" || i.game === state.game);
+const taken = (i) => i.forMyGame === "use" || i.forMyGame === "avoid" || i.forMyGame === "maybe";
+
+function matches(i) {
+  if (!state.q) return true;
+  const hay = [i.text, i.theme, (i.quotes || []).map(q => q.text).join(" ")].join(" ").toLowerCase();
+  return state.q.toLowerCase().split(/\s+/).every(w => hay.includes(w));
+}
+async function toggle(i) {
+  if (!state.db || !state.canWrite) return;
+  try { await state.db.doc("insights/" + i.id).update({ forMyGame: taken(i) ? "" : "use" }); } catch {}
+}
+function renderGames() {
+  const g = $("games"); g.replaceChildren();
+  const mk = (id, label, pct) => { const b = el("button", "game", label); b.type = "button"; b.setAttribute("aria-pressed", String(state.game === id)); if (pct != null) b.append(el("small", null, pct + "%")); b.onclick = () => { state.game = id; renderAll(); }; g.append(b); };
+  mk("all", "Все игры (" + state.games.length + ")");
+  state.games.forEach(gm => mk(gm.id, gm.name, gm.positivePct));
+  const gm = state.games.find(x => x.id === state.game);
+  $("summary").hidden = !gm; if (gm) $("summary").textContent = (gm.reviewsTotal ? gm.positivePct + "% положительных из " + gm.reviewsTotal + ". " : "") + (gm.summary || "");
+}
+function renderMine() {
+  const m = $("mine"); m.replaceChildren();
+  const h = el("h2"); h.innerHTML = CHECK.replace('width="24"', ""); h.firstChild.style.cssText = "width:14px;height:14px"; h.append(document.createTextNode("Учесть в моей игре"));
+  m.append(h);
+  const picked = state.insights.filter(taken);
+  if (!picked.length) { m.append(el("p", null, "Пока пусто. Отметьте галочкой строки в колонках ниже.")); return; }
+  const ul = el("ul");
+  picked.forEach(i => { const li = el("li", null, i.text + " "); li.append(el("span", null, "· " + gameName(i.game))); ul.append(li); });
+  m.append(ul);
+}
+function row(i) {
+  const r = el("div", "row");
+  const t = el("button", "row-text"); t.type = "button"; t.setAttribute("aria-expanded", String(state.open.has(i.id)));
+  t.append(document.createTextNode(i.text));
+  const meta = el("div", "row-meta");
+  if (i.share) meta.append(el("span", null, "~" + i.share + "%"));
+  if (state.game === "all") meta.append(el("span", null, gameName(i.game)));
+  if ((i.quotes || []).length) meta.append(el("span", null, state.open.has(i.id) ? "скрыть цитаты" : "цитаты"));
+  t.append(meta);
+  t.onclick = () => { state.open.has(i.id) ? state.open.delete(i.id) : state.open.add(i.id); renderCols(); };
+  const left = el("div"); left.append(t);
+  r.append(left);
+  if (state.canWrite) { const b = el("button", "tick"); b.type = "button"; b.innerHTML = CHECK; b.setAttribute("aria-pressed", String(taken(i))); b.setAttribute("aria-label", "Учесть в моей игре"); b.title = "Учесть в моей игре"; b.onclick = () => toggle(i); r.append(b); }
+  if (state.open.has(i.id) && (i.quotes || []).length) {
+    const qs = el("div", "quotes");
+    i.quotes.slice(0, 2).forEach(q => { const bq = el("blockquote"); if (q.url) { const a = el("a", null, "«" + q.text + "»"); a.href = q.url; a.target = "_blank"; a.rel = "noopener"; bq.append(a); } else bq.textContent = "«" + q.text + "»"; qs.append(bq); });
+    r.append(qs);
+  }
+  return r;
+}
+function renderCols() {
+  const box = $("cols"); box.replaceChildren();
+  if (!state.insights.length) { box.append(Object.assign(el("div", "empty"), { textContent: "База пока пустая. Попросите Claude разобрать первую игру: фраза внизу страницы." })); return; }
+  for (const [key, label, cv, types] of COLS) {
+    const items = scoped().filter(i => types.includes(i.type) && matches(i)).sort((a, b) => (b.share || 0) - (a.share || 0));
+    const col = el("section", "col"); col.style.setProperty("--c", `var(${cv})`);
+    const h = el("h2", null, label + " "); h.append(el("b", null, String(items.length))); col.append(h);
+    const show = state.expanded.has(key) ? items : items.slice(0, TOP);
+    show.forEach(i => col.append(row(i)));
+    if (!items.length) col.append(el("p", "row-meta", "Ничего"));
+    if (items.length > TOP) { const mb = el("button", "more", state.expanded.has(key) ? "Свернуть" : "Показать ещё " + (items.length - TOP)); mb.type = "button"; mb.onclick = () => { state.expanded.has(key) ? state.expanded.delete(key) : state.expanded.add(key); renderCols(); }; col.append(mb); }
+    box.append(col);
+  }
+}
+function renderAll() { renderGames(); renderMine(); renderCols(); }
+$("q").addEventListener("input", e => { state.q = e.target.value.trim(); renderCols(); });
+$("copyBtn").onclick = async () => { try { await navigator.clipboard.writeText($("phraseText").textContent); $("copyBtn").textContent = "Скопировано"; } catch { const r = document.createRange(); r.selectNodeContents($("phraseText")); const s = getSelection(); s.removeAllRanges(); s.addRange(r); } };
+renderAll();
+(async () => {
+  const c = window.claude; const db = c ? await c.use("db") : null;
+  if (!db) { $("cols").replaceChildren(Object.assign(el("div", "empty"), { textContent: "База недоступна в этом окне. Откройте страницу на claude.ai, войдя в аккаунт." })); return; }
+  state.db = db;
+  const user = await c.use("user"); const cw = user ? await user.can("data.write") : null; state.canWrite = cw !== false;
+  const t = setTimeout(() => { if (!state.insights.length) $("cols").replaceChildren(Object.assign(el("div", "empty"), { textContent: "База пока не загрузилась. Проверьте соединение: страница обновится сама." })); }, 10000);
+  db.collection("games").onSnapshot(s => { state.games = s.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => String(b.analyzedAt || "").localeCompare(String(a.analyzedAt || ""))); renderAll(); }, () => {});
+  db.collection("insights").onSnapshot(s => { clearTimeout(t); state.insights = s.docs.map(d => ({ id: d.id, ...d.data() })); renderAll(); }, () => clearTimeout(t));
+})();
+</script>
