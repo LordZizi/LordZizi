@@ -52,18 +52,79 @@ button, input { font: inherit; color: inherit; }
 @keyframes blink { 50% { opacity: 0; } }
 h1 { font: 400 clamp(22px, 4.6vw, 40px)/1.35 var(--f-pixel); margin: 10px 0 0; letter-spacing: .02em; text-shadow: 3px 3px 0 var(--accent), 6px 6px 0 var(--shadow); }
 .lead { margin: 12px 0 0; color: var(--ink-2); max-width: 54ch; }
-.tools { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
-.tools .pbtn { font-size: .95rem; }
+.corner { position: absolute; top: 14px; right: 14px; display: flex; gap: 12px; z-index: 4; }
+.ibtn { width: 44px; height: 44px; padding: 0; }
+.ibtn .spr { width: 24px; height: 24px; }
 .snd[aria-pressed="false"] { color: var(--ink-2); }
-.sprites { display: grid; grid-template-columns: repeat(4, 44px); gap: 22px 16px; align-content: center; transform: rotate(-6deg); }
-.sprite { all: unset; width: 44px; height: 44px; display: grid; place-items: center; cursor: pointer; --off: 0px; animation: bob 1.6s steps(2) infinite; transform: translateY(var(--off)); }
-.sprite:nth-child(2n) { --off: 12px; animation-duration: 2.1s; }
+.hero-side { display: grid; justify-items: center; align-content: end; gap: 18px; padding-top: 56px; min-width: 220px; }
+.monster-wrap { position: relative; }
+.monster { all: unset; cursor: pointer; display: block; width: 104px; height: 104px; color: var(--like); animation: bob 1.4s steps(2) infinite; }
+.monster svg { width: 104px; height: 104px; display: block; filter: drop-shadow(4px 4px 0 var(--shadow)); }
+.monster svg rect { shape-rendering: crispEdges; }
+.monster:focus-visible { outline: 3px solid var(--accent); outline-offset: 4px; }
+.monster.jump { animation: mjump .45s steps(5); }
+@keyframes mjump { 20% { transform: scale(1.15, .8); } 50% { transform: translateY(-22px) scale(.9, 1.1); } 80% { transform: scale(1.1, .9); } }
+.eyes { transform-box: fill-box; transform-origin: center; animation: eyeblink 4.2s steps(1) infinite; }
+@keyframes eyeblink { 0%, 94% { transform: none; } 95%, 98% { transform: scaleY(.15); } }
+.bubble { position: absolute; right: calc(100% + 16px); top: -4px; width: max-content; max-width: 250px; background: var(--dlg); --pl: var(--dlg-line); padding: 10px 13px; font: 500 .92rem/1.45 var(--f-body); color: var(--ink); z-index: 3; visibility: hidden; }
+.bubble.show { visibility: visible; animation: popin .2s steps(3); }
+.bubble::after { content: ""; position: absolute; right: -12px; top: 22px; width: 6px; height: 6px; background: var(--dlg-line); box-shadow: 4px 4px 0 var(--dlg-line); }
+.bubble small { display: block; margin-top: 6px; color: var(--ink-2); font-size: .78rem; }
+@keyframes popin { from { transform: scale(.6); opacity: 0; } }
+.sprites { display: grid; grid-template-columns: repeat(4, 34px); gap: 10px 14px; transform: rotate(-4deg); }
+.sprite { all: unset; width: 34px; height: 34px; display: grid; place-items: center; cursor: pointer; --off: 0px; animation: bob 1.6s steps(2) infinite; transform: translateY(var(--off)); }
+.sprite:nth-child(2n) { --off: 8px; animation-duration: 2.1s; }
 .sprite:nth-child(3n) { animation-delay: -.7s; }
-.sprite svg { width: 40px; height: 40px; filter: drop-shadow(3px 3px 0 var(--shadow)); }
+.sprite svg { width: 30px; height: 30px; filter: drop-shadow(3px 3px 0 var(--shadow)); }
 .sprite.hop { animation: hop .32s steps(4); }
 @keyframes bob { 50% { transform: translateY(calc(var(--off) - 6px)); } }
 @keyframes hop { 0%, 100% { transform: translateY(var(--off)) scale(1); } 40% { transform: translateY(calc(var(--off) - 18px)) scale(1.2); } }
-@media (max-width: 760px) { .hero { grid-template-columns: 1fr; } .sprites { display: none; } }
+@media (max-width: 760px) { .hero { grid-template-columns: 1fr; } .sprites { display: none; } .eyebrow { padding-right: 108px; }
+  .hero-side { position: absolute; top: 70px; right: 14px; padding: 0; min-width: 0; } .monster, .monster svg { width: 64px; height: 64px; }
+  .hero h1, .hero .lead { padding-right: 76px; } .bubble { max-width: min(230px, calc(100vw - 130px)); } }
+
+/* idea generator: slot-machine reels */
+.gen { background: var(--surface); padding: 18px 20px 20px; display: grid; gap: 16px; }
+.gen-head { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; }
+.gen-head h2 { display: flex; align-items: center; gap: 10px; font: 400 13px/1.6 var(--f-pixel); margin: 0; color: var(--accent); }
+.gen-head p { flex-basis: 100%; margin: 0; color: var(--ink-2); font-size: .92rem; }
+.seg { display: inline-flex; flex-wrap: wrap; gap: 10px; margin-left: auto; }
+.seg .pbtn { min-height: 38px; font-size: .9rem; }
+.seg .pbtn[aria-pressed="true"], .chip[aria-pressed="true"] { background: var(--c, var(--accent)); color: var(--on-c); --pl: var(--c, var(--accent)); }
+.reels { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)) auto; gap: 16px; }
+@media (max-width: 760px) { .reels { grid-template-columns: 1fr; } }
+.reel { display: grid; gap: 6px; align-content: start; text-align: left; min-height: 96px; padding: 12px 14px; background: var(--dlg); cursor: pointer; font: inherit; color: inherit; }
+.reel .lbl { display: flex; align-items: center; justify-content: space-between; gap: 8px; font: 400 9px/1.6 var(--f-pixel); color: var(--ink-2); }
+.reel .lbl .spr { width: 14px; height: 14px; color: var(--take); }
+.reel .val { font: 600 1.05rem/1.35 var(--f-head); overflow-wrap: anywhere; }
+.reel.spin .val { color: var(--ink-2); filter: blur(.5px); }
+.reel.stop { animation: thunk .2s steps(2); }
+.reel[aria-pressed="true"] { --pl: var(--take); }
+@keyframes thunk { 50% { transform: translateY(5px); } }
+.spin-btn { min-height: 96px; padding: 10px 24px; font: 400 12px/1.7 var(--f-pixel); background: var(--accent); color: var(--on-c); --pl: var(--accent); }
+.spin-btn:hover { background: color-mix(in srgb, var(--accent) 82%, #fff); }
+.ingr summary { cursor: pointer; display: flex; align-items: center; gap: 8px; min-height: 40px; font: 600 .95rem var(--f-head); color: var(--ink-2); list-style: none; }
+.ingr summary::-webkit-details-marker { display: none; }
+.ingr summary::before { content: "▸"; color: var(--accent); }
+.ingr[open] summary::before { content: "▾"; }
+.ingr-body { display: grid; gap: 16px; padding-top: 10px; }
+.ingr-row { display: grid; gap: 10px; }
+.ingr-row > span { font: 600 .8rem var(--f-head); letter-spacing: .1em; text-transform: uppercase; color: var(--ink-2); }
+.chips { display: flex; flex-wrap: wrap; gap: 10px; }
+.chip { min-height: 36px; padding: 4px 10px; font: 500 .88rem/1.3 var(--f-body); text-align: left; }
+.chip b { font: 400 7px var(--f-pixel); margin-left: 6px; opacity: .75; }
+.ins-list { max-height: 300px; overflow: auto; padding: 6px 10px 12px 4px; }
+.gen-out { display: grid; gap: 10px; }
+.gen-out h3 { margin: 0 0 10px; font: 400 clamp(12px, 1.8vw, 15px)/1.7 var(--f-pixel); color: var(--take); }
+.gen-out dl { margin: 0; display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 8px 16px; }
+.gen-out dt { font: 600 .9rem var(--f-head); color: var(--ink-2); }
+.gen-out dd { margin: 0; }
+.gen-out dd ul { margin: 0; padding-left: 18px; }
+@media (max-width: 560px) { .gen-out dl { grid-template-columns: 1fr; gap: 2px; } .gen-out dd { margin-bottom: 8px; } }
+.gen-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 16px; }
+.gen-actions .pbtn { min-height: 40px; font-size: .92rem; }
+.ai-text { white-space: pre-wrap; margin: 0; }
+.hint { margin: 0; color: var(--ink-2); font-size: .92rem; }
 
 /* game chips + search */
 .bar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
@@ -168,17 +229,34 @@ dialog.set::backdrop { background: rgba(0,0,0,.6); }
 
 <div class="wrap">
   <header class="hero px">
+    <div class="corner">
+      <button class="pbtn px ibtn snd" id="sndBtn" type="button" aria-pressed="true"></button>
+      <button class="pbtn px ibtn" id="setBtn" type="button" aria-label="Настройки" title="Настройки"></button>
+    </div>
     <div>
       <div class="eyebrow">База знаний для моей 2D-игры <span class="cursor" aria-hidden="true"></span></div>
       <h1>Банк<br>отзывов</h1>
       <p class="lead">Что игроки хвалят, ругают и просят в похожих играх. Нажимайте «Учесть» — выводы соберутся в квест-лог вашей игры.</p>
-      <div class="tools">
-        <button class="pbtn px snd" id="sndBtn" type="button" aria-pressed="true"></button>
-        <button class="pbtn px" id="setBtn" type="button">Настройки</button>
-      </div>
     </div>
-    <div class="sprites" id="sprites" aria-hidden="true"></div>
+    <div class="hero-side">
+      <div class="monster-wrap">
+        <div class="bubble px" id="bubble" role="status" aria-live="polite"></div>
+        <button class="monster" id="monster" type="button" aria-label="Монстрик Бит: нажмите, и он что-нибудь скажет" title="Ткни меня"></button>
+      </div>
+      <div class="sprites" id="sprites" aria-hidden="true"></div>
+    </div>
   </header>
+
+  <section class="gen px" id="gen" aria-labelledby="genTitle">
+    <div class="gen-head">
+      <h2 id="genTitle"><span id="genIcon"></span>Генератор идей</h2>
+      <div class="seg" id="genMode" aria-label="Что придумать"></div>
+      <p>Крутите барабаны — получите концепт 2D-игры или механику. Нажмите на барабан, чтобы закрепить значение.</p>
+    </div>
+    <div class="reels" id="reels"></div>
+    <details class="ingr" id="ingr"><summary id="ingrSum"></summary><div class="ingr-body" id="ingrBody"></div></details>
+    <div class="gen-out" id="genOut"></div>
+  </section>
 
   <div class="bar"><div class="bar" id="games" aria-label="Игры"></div><input class="search px" id="q" type="search" placeholder="Поиск по отзывам" aria-label="Поиск по выводам и цитатам"></div>
 
@@ -214,8 +292,31 @@ const MAPS = {
   potion: ["..3333..", "...11...", "...11...", "..1111..", ".121111.", ".111111.", ".111113.", "..1133.."],
   key: [".111....", "1...1...", "1...1111", "1...1.1.", ".111..1.", "........", "........", "........"],
   shield: ["11111111", "12111113", "12111113", "12111113", ".121113.", ".111113.", "..1113..", "...13..."],
-  check: ["........", "......11", ".....11.", "1...11..", "11.11...", ".111....", "..1.....", "........"]
+  check: ["........", "......11", ".....11.", "1...11..", "11.11...", ".111....", "..1.....", "........"],
+  spk: ["...1....", "..11..1.", "1111...1", "1111.1.1", "1111.1.1", "1111...1", "..11..1.", "...1...."],
+  mute: ["...1....", "..11....", "1111.1.1", "1111..1.", "1111..1.", "1111.1.1", "..11....", "...1...."],
+  gear: ["...11...", ".1.11.1.", "..1111..", "111..111", "111..111", "..1111..", ".1.11.1.", "...11..."],
+  lock: ["..111...", ".1...1..", ".1...1..", "1111111.", "1112111.", "1113111.", "1111111.", "........"],
+  dice: ["1111111.", "1.11111.", "1111111.", "111.111.", "1111111.", "11111.1.", "1111111.", "........"]
 };
+/* the monster "Бит": 12x12, b body, h highlight, d shade, w eye white, k pupil, o horn, r mouth, t tooth */
+const MONSTER = ["..o......o..", "..oo....oo..", "...bbbbbb...", "..bhhbbbbbb.", ".bhbbbbbbbbd", ".bwwkbbwwkbd", ".bwwkbbwwkbd", ".bbbbbbbbbbd", ".bbrrrrrrbbd", ".bbrtrrtrbbd", "..bbbbbbbbd.", "..bbd..bbd.."];
+function monsterSvg() {
+  let base = "", eyes = "";
+  const R = (x, y, f, o) => `<rect x="${x}" y="${y}" width="1" height="1" style="fill:${f}"${o ? ` fill-opacity="${o}"` : ""}/>`;
+  MONSTER.forEach((row, y) => [...row].forEach((ch, x) => {
+    if (ch === ".") return;
+    if ("bhdwk".includes(ch)) base += R(x, y, "currentColor");
+    if (ch === "h") base += R(x, y, "#fff", .5);
+    if (ch === "d") base += R(x, y, "#000", .35);
+    if (ch === "o") base += R(x, y, "var(--take)");
+    if (ch === "r") base += R(x, y, "#3a0d1f");
+    if (ch === "t") base += R(x, y, "#fff");
+    if (ch === "w") eyes += R(x, y, "#fff");
+    if (ch === "k") eyes += R(x, y, "#14121f");
+  }));
+  return `<svg viewBox="0 0 12 12" aria-hidden="true">${base}<g class="eyes">${eyes}</g></svg>`;
+}
 function sprite(name, size = 24) {
   let r = "";
   MAPS[name].forEach((row, y) => [...row].forEach((ch, x) => {
@@ -267,7 +368,10 @@ const sfx = (() => {
     open() { ready(); beep(440, 0, 0.05, "triangle", 0.07); beep(880, 0.05, 0.08, "triangle", 0.07); },
     type() { const n = performance.now(); if (n - lastType < 38) return; lastType = n; beep(320 + Math.random() * 220, 0, 0.018, "square", 0.006); },
     note(f) { ready(); beep(f, 0, 0.28, "triangle", 0.08); beep(f * 2, 0, 0.1, "square", 0.008); },
-    jingle() { ready(); [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => beep(f, i * 0.07, 0.1, "square", 0.018)); }
+    jingle() { ready(); [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => beep(f, i * 0.07, 0.1, "square", 0.018)); },
+    tick() { beep(1700, 0, 0.012, "square", 0.006); },
+    ding(k) { beep([783.99, 987.77, 1174.66][k] || 880, 0, 0.12, "square", 0.02); },
+    chirp() { ready(); const f = 380 + Math.random() * 160; beep(f, 0, 0.08, "square", 0.02, f * 2.3); beep(f * 2, 0.1, 0.09, "square", 0.018, f * 1.2); }
   };
 })();
 document.addEventListener("pointerdown", () => sfx.unlock(), { capture: true });
@@ -323,8 +427,187 @@ async function toggle(i, node) {
   $("sprites").append(b);
 });
 
+/* ---------- monster with quotes from games and memes ---------- */
+const QUOTES = [
+  ["It's dangerous to go alone! Take this.", "The Legend of Zelda"], ["The cake is a lie.", "Portal"], ["Do a barrel roll!", "Star Fox 64"],
+  ["War. War never changes.", "Fallout"], ["Would you kindly…", "BioShock"], ["All your base are belong to us.", "Zero Wing"],
+  ["Hey! Listen!", "The Legend of Zelda: Ocarina of Time"], ["Thank you! But our princess is in another castle!", "Super Mario Bros."],
+  ["Press F to pay respects.", "Call of Duty: Advanced Warfare"], ["I used to be an adventurer like you, then I took an arrow in the knee.", "Skyrim"],
+  ["Hey, you. You're finally awake.", "Skyrim"], ["Praise the sun!", "Dark Souls"], ["YOU DIED", "Dark Souls"], ["Finish him!", "Mortal Kombat"],
+  ["Stay awhile and listen.", "Diablo II"], ["Wake up, Mr. Freeman.", "Half-Life 2"], ["A winner is you!", "Pro Wrestling (NES)"],
+  ["Kept you waiting, huh?", "Metal Gear Solid"], ["Snake? Snake?! SNAAAKE!", "Metal Gear Solid"], ["Nothing is true, everything is permitted.", "Assassin's Creed"],
+  ["Did I ever tell you what the definition of insanity is?", "Far Cry 3"], ["What is a man? A miserable little pile of secrets!", "Castlevania: Symphony of the Night"],
+  ["Hesitation is defeat.", "Sekiro"], ["Ещё один ход — и спать.", "мем Civilization"], ["Git gud.", "мем фанатов Dark Souls"],
+  ["Это не баг, это фича.", "мем разработчиков"], ["Работает — не трогай.", "мем разработчиков"], ["Ещё один забег — и точно спать.", "мем рогаликов"],
+  ["Achievement unlocked: прочитал отзывы!", "Бит"], ["Отзывы — это бесплатный плейтест.", "Бит, мудрость дня"], ["Бесконечный режим просят все. Все!", "Бит про отзывы Steam"]
+];
+let quoteBag = [], bubbleTimer = 0;
+function say(text, src) {
+  const b = $("bubble"); b.replaceChildren(el("span", null, text)); if (src) b.append(el("small", null, "— " + src));
+  b.classList.remove("show"); void b.offsetWidth; b.classList.add("show");
+  clearTimeout(bubbleTimer); bubbleTimer = setTimeout(() => b.classList.remove("show"), 5200);
+}
+$("monster").innerHTML = monsterSvg();
+$("monster").addEventListener("click", () => {
+  if (!quoteBag.length) quoteBag = QUOTES.map((_, i) => i).sort(() => Math.random() - 0.5);
+  const [t, src] = QUOTES[quoteBag.pop()];
+  sfx.chirp(); say(t, src);
+  const m = $("monster"); m.classList.remove("jump"); void m.offsetWidth; m.classList.add("jump");
+});
+$("monster").addEventListener("animationend", (e) => { if (e.animationName === "mjump") $("monster").classList.remove("jump"); });
+setTimeout(() => { if (!$("bubble").classList.contains("show")) say("Привет! Я Бит. Ткни меня — скажу что-нибудь умное.", null); }, 1400);
+
+/* ---------- idea generator ---------- */
+const BASE_GENRES = ["Платформер", "Метроидвания", "Рогалик", "Колодостроитель", "Защита башен", "Автобатлер", "Инкрементальная", "Выживалка в духе «сурвайворов»", "Головоломка", "Пазл-платформер", "Скролл-шутер", "Ритм-игра", "Ферма-симулятор", "Пошаговая тактика", "Экшен-RPG с видом сверху", "Стелс", "Бит-эм-ап", "Симулятор магазина", "Колони-сим", "Визуальная новелла", "Рыбалка", "Гонки с видом сверху", "Файтинг", "Карточная дуэль"];
+const MECHS = ["время идёт, только когда ты двигаешься", "смерть оставляет призрака-помощника", "уровень — колода карт, которую ты раскладываешь", "гравитация меняется в ритм музыки", "каждый враг — ресурс для крафта", "мир перестраивается после каждого забега", "ты управляешь двумя героями одной кнопкой", "свет — это здоровье", "звуки видны как волны на экране", "у героя нет атаки, только толчок", "петля времени длиной в 60 секунд", "враги учатся на твоих прошлых забегах", "камера замораживает всё, что в кадре", "противник строит уровень прямо по ходу игры", "оружие тяжелеет с каждой победой", "каждый прыжок стоит монету", "побеждённые боссы вступают в твою команду", "погода меняет правила боя", "инвентарь — это и есть карта уровня", "кубики решают исход, но их можно переплавлять", "питомец растёт от твоих решений", "любое действие шумит и будит монстров", "башни можно поднимать и переносить", "ты играешь за подземелье, а не за героя", "предметы сливаются в более сильные"];
+const SETTINGS = ["подводный город", "закрытый торговый центр из 90-х", "кухня ресторана в час пик", "космическая свалка", "лес, где сезоны меняются за минуту", "библиотека-лабиринт", "крыши ночного города", "внутренности старого компьютера", "болото с ведьмами", "почта на краю ледяного мира", "бродячий цирк", "улей", "тонущий корабль", "ярмарка духов", "сон кота", "пустыня с поющими дюнами", "детская комната с игрушками", "метро после конца света", "облачный архипелаг", "грибной лес"];
+const VERBS = ["Прыжок", "Рывок", "Крафт", "Торговля", "Строительство", "Приручение", "Перемотка времени", "Рисование", "Копирование врагов", "Взлом", "Готовка", "Рыбалка", "Телепортация", "Слияние предметов", "Ставки", "Толкание", "Захват крюком", "Смена формы"];
+const TWISTS = ["но каждое использование меняет правила", "не больше трёх раз за ход", "и это задевает соседние клетки", "но работает только в темноте", "с комбо-множителем", "можно отменить, заплатив здоровьем", "и враги умеют то же самое", "вместе с ИИ-напарником", "строго в ритм музыки", "с риском: удвоить или потерять", "и это оставляет след на карте", "но заряжается от ошибок игрока"];
+const TITLE_A = ["Последний", "Бесконечный", "Карманный", "Тихий", "Ржавый", "Ночной", "Хрупкий", "Весёлый", "Маленький", "Пиксельный", "Сонный", "Блуждающий"];
+const TITLE_B = ["забег", "рейд", "смотритель", "почтальон", "алхимик", "сторож", "караван", "улей", "фонарь", "архив", "кузнец", "маяк"];
+const PROTO = ["Серый прототип одной комнаты и трёх типов врагов — за вечер.", "Бумажный прототип: карточки и кубик, проверить на друге.", "Одна арена, 60 секунд, счётчик очков — играется ли без графики?", "Сделать только управление и камеру, без целей: приятно ли просто двигаться?", "Три уровня по 30 секунд, каждый учит одной идее механики."];
+const G = { mode: "concept", locks: [false, false, false], vals: [null, null, null], genres: new Set(), games: new Set(), ins: new Set(), spinning: false, result: null, ai: null, aiText: "", aiErr: "" };
+let sampleFn = null;
+const pick = (a) => a[Math.floor(Math.random() * a.length)];
+const cap = (s) => s ? s[0].toUpperCase() + s.slice(1) : s;
+const splitGenre = (g) => String(g || "").split(/[+,]/).map(x => x.trim()).filter(x => x && !/2d|пиксел/i.test(x)).map(cap);
+function dbGenres() { const out = []; state.games.forEach(g => splitGenre(g.genre).forEach(n => { if (!out.some(x => x.toLowerCase() === n.toLowerCase())) out.push(n); })); return out; }
+const stem = (s) => s.toLowerCase().slice(0, 8);
+function allGenres() { const d = dbGenres(); return [...d.map(n => ({ n, db: true })), ...BASE_GENRES.filter(n => !d.some(x => stem(x) === stem(n))).map(n => ({ n, db: false }))]; }
+function genrePool() {
+  const p = [...G.genres];
+  G.games.forEach(id => { const gm = state.games.find(g => g.id === id); if (gm) splitGenre(gm.genre).forEach(n => { if (!p.includes(n)) p.push(n); }); });
+  return p.length ? p : allGenres().map(x => x.n);
+}
+const REELS = { concept: [["Жанр", genrePool], ["Фишка", () => MECHS], ["Место", () => SETTINGS]], mechanic: [["Жанр", genrePool], ["Действие", () => VERBS], ["Твист", () => TWISTS]] };
+function renderGenHead() {
+  $("genIcon").innerHTML = sprite("dice", 22);
+  $("genMode").replaceChildren(...[["concept", "Концепт игры"], ["mechanic", "Механика"]].map(([id, l]) => {
+    const b = el("button", "pbtn px", l); b.type = "button"; b.setAttribute("aria-pressed", String(G.mode === id));
+    b.onclick = () => { if (G.spinning || G.mode === id) return; sfx.tab(); G.mode = id; G.locks = [false, false, false]; G.vals = [null, null, null]; G.result = null; G.ai = null; renderGenHead(); renderReels(); renderGenOut(); };
+    return b;
+  }));
+}
+function renderReels() {
+  const box = $("reels"); box.replaceChildren();
+  REELS[G.mode].forEach(([label], k) => {
+    const r = el("button", "reel px"); r.type = "button"; r.setAttribute("aria-pressed", String(G.locks[k]));
+    r.setAttribute("aria-label", label + ": " + (G.vals[k] || "не выбрано") + (G.locks[k] ? ", закреплено" : "") + ". Нажмите, чтобы " + (G.locks[k] ? "открепить" : "закрепить"));
+    const lbl = el("span", "lbl", label); if (G.locks[k]) lbl.insertAdjacentHTML("beforeend", sprite("lock", 14));
+    r.append(lbl, el("span", "val", G.vals[k] || "???"));
+    r.onclick = () => { if (G.spinning || !G.vals[k]) return; G.locks[k] = !G.locks[k]; sfx.click(); renderReels(); };
+    box.append(r);
+  });
+  const s = el("button", "pbtn px spin-btn", "Крутить!"); s.type = "button"; s.id = "spinBtn"; s.onclick = spin; box.append(s);
+}
+function spin() {
+  if (G.spinning) return; G.spinning = true; G.ai = null; G.aiText = ""; sfx.click();
+  const defs = REELS[G.mode], reels = [...document.querySelectorAll("#reels .reel")];
+  const finals = defs.map(([, src], k) => G.locks[k] && G.vals[k] ? G.vals[k] : pick(src()));
+  const finish = () => { G.vals = finals; G.spinning = false; makeResult(); renderReels(); renderGenOut(); sfx.jingle(); };
+  if (!pref.motion) { finish(); return; }
+  const stopAt = [650, 1000, 1350], t0 = performance.now();
+  reels.forEach((r, k) => { if (!(G.locks[k] && G.vals[k])) r.classList.add("spin"); });
+  const iv = setInterval(() => {
+    const t = performance.now() - t0; let live = false;
+    defs.forEach(([, src], k) => {
+      const r = reels[k]; if (!r.classList.contains("spin")) return;
+      const v = r.querySelector(".val");
+      if (t < stopAt[k]) { v.textContent = pick(src()); live = true; }
+      else { r.classList.remove("spin"); r.classList.add("stop"); v.textContent = finals[k]; sfx.ding(k); }
+    });
+    if (live) sfx.tick(); else { clearInterval(iv); setTimeout(finish, 180); }
+  }, 70);
+}
+function reviewBits() {
+  let pool = state.insights.filter(i => G.ins.has(i.id)), auto = false;
+  if (!pool.length) {
+    const src = state.insights.filter(i => !G.games.size || G.games.has(i.game));
+    const good = src.filter(i => i.type !== "dislike"), bad = src.filter(i => i.type === "dislike");
+    pool = [good.length && pick(good), bad.length && pick(bad)].filter(Boolean); auto = pool.length > 0;
+  }
+  return { use: pool.filter(i => i.type !== "dislike"), avoid: pool.filter(i => i.type === "dislike"), auto };
+}
+function makeResult() {
+  const [a, b, c] = G.vals, rb = reviewBits();
+  G.result = G.mode === "concept"
+    ? { kind: "Идея игры", title: pick(TITLE_A) + " " + pick(TITLE_B), rows: [["Жанр", a], ["Место", cap(c)], ["Фишка", cap(b)], ["Цикл", "попробуй → " + pick(VERBS).toLowerCase() + " → получи награду → открой новое"]], rb }
+    : { kind: "Механика", title: b + " — " + c, rows: [["Жанр", a], ["Проверить", pick(PROTO)]], rb };
+}
+function resultText() {
+  const r = G.result; if (!r) return "";
+  const lines = [r.kind + ": " + r.title, ...r.rows.map(([k, v]) => k + ": " + v), ...r.rb.use.map(i => "Учесть: " + i.text), ...r.rb.avoid.map(i => "Избежать: " + i.text)];
+  if (G.aiText) lines.push("", "Claude:", G.aiText);
+  return lines.join("\n");
+}
+function renderGenOut() {
+  const box = $("genOut"); box.replaceChildren();
+  const r = G.result;
+  if (!r) { box.append(el("p", "hint", "Нажмите «Крутить!». Ингредиенты выше — по желанию: без них генератор берёт всё подряд.")); return; }
+  const d = el("div", "dialog px"); d.append(el("span", "who", r.kind), el("h3", null, r.title));
+  const dl = el("dl");
+  r.rows.forEach(([k, v]) => dl.append(el("dt", null, k), el("dd", null, v)));
+  const list = (k, arr) => { if (!arr.length) return; const dd = el("dd"), ul = el("ul"); arr.forEach(i => ul.append(el("li", null, i.text))); dd.append(ul); dl.append(el("dt", null, k), dd); };
+  list("Учесть" + (r.rb.auto ? " (случайно из базы)" : ""), r.rb.use); list("Избежать", r.rb.avoid);
+  d.append(dl);
+  if (G.ai) {
+    const ai = el("div", "dialog px"); ai.style.marginTop = "26px"; ai.append(el("span", "who", "Claude"));
+    if (G.ai === "error") ai.append(el("p", "hint", G.aiErr)); else ai.append(el("p", "ai-text" + (G.ai === "loading" && !G.aiText ? " loading" : ""), G.aiText || "Claude думает"));
+    d.append(ai);
+  }
+  const acts = el("div", "gen-actions");
+  const again = el("button", "pbtn px", "Ещё раз"); again.type = "button"; again.onclick = spin; acts.append(again);
+  if (sampleFn) { const imp = el("button", "pbtn px", G.ai === "loading" ? "Claude пишет…" : "Развернуть с Claude"); imp.type = "button"; imp.disabled = G.ai === "loading"; imp.onclick = improve; acts.append(imp); }
+  const cp = el("button", "pbtn px", "Копировать"); cp.type = "button";
+  cp.onclick = async () => { try { await navigator.clipboard.writeText(resultText()); cp.textContent = "Скопировано"; sfx.jingle(); } catch {} };
+  acts.append(cp); d.append(acts);
+  box.append(d);
+}
+async function improve() {
+  if (!sampleFn || !G.result || G.ai === "loading") return;
+  sfx.open(); G.ai = "loading"; G.aiText = ""; renderGenOut();
+  const r = G.result;
+  const lines = [...r.rows.map(([k, v]) => k + ": " + v), ...r.rb.use.map(i => "Игроки ценят или просят: " + i.text), ...r.rb.avoid.map(i => "Игроки ругают, этого избежать: " + i.text)];
+  const prompt = (G.mode === "concept" ? "Ты геймдизайнер инди-игр. Придумай концепт небольшой 2D-игры для соло-разработчика из этих ингредиентов:\n" : "Ты геймдизайнер инди-игр. Разверни игровую механику для 2D-игры из этих ингредиентов:\n")
+    + lines.map(l => "- " + l).join("\n")
+    + "\n\nОтветь по-русски, простым текстом без Markdown и без звёздочек, до 170 слов. Короткие заголовки на отдельных строках: "
+    + (G.mode === "concept" ? "Название, Суть (2 предложения), Игровой цикл (3 шага), Три механики, Что взяли из отзывов, Прототип за выходные." : "Как работает, Почему это интересно, Как сочетается с жанром, Риски, Прототип за вечер.");
+  try {
+    const res = await sampleFn(prompt, { onText: ({ text }) => { G.aiText = text; const n = document.querySelector("#genOut .ai-text"); if (n) { n.textContent = text; n.classList.remove("loading"); } } });
+    G.aiText = res.text; G.ai = "done"; sfx.jingle();
+  } catch (e) {
+    if (e && e.code === "not_granted") { sampleFn = null; G.ai = null; }
+    else { G.ai = "error"; G.aiErr = e && e.code === "rate_limited" ? "Слишком много запросов. Попробуйте через минуту." : "Не получилось спросить Claude. Попробуйте позже."; }
+  }
+  renderGenOut();
+}
+function renderIngr() {
+  const n = G.genres.size + G.games.size + G.ins.size;
+  $("ingrSum").textContent = n ? `Ингредиенты: ${plural(G.genres.size, "жанр", "жанра", "жанров")}, ${plural(G.games.size, "игра", "игры", "игр")}, ${plural(G.ins.size, "отзыв", "отзыва", "отзывов")}` : "Ингредиенты (по желанию): жанры, игры, отзывы";
+  const body = $("ingrBody"); body.replaceChildren();
+  const row = (label, nodes) => { const r = el("div", "ingr-row"); r.append(el("span", null, label)); const c = el("div", "chips"); c.append(...nodes); r.append(c); body.append(r); return c; };
+  const chip = (text, on, fn, c, full) => { const b = el("button", "pbtn px chip"); b.type = "button"; b.setAttribute("aria-pressed", String(on)); if (c) b.style.setProperty("--c", `var(${c})`); b.append(text); if (full) b.title = full; b.onclick = () => { fn(); sfx.click(); renderIngr(); }; return b; };
+  const tg = (set, v) => () => set.has(v) ? set.delete(v) : set.add(v);
+  row("Жанры", allGenres().map(({ n: g, db }) => { const t = document.createDocumentFragment(); t.append(g); if (db) t.append(el("b", null, "БАЗА")); return chip(t, G.genres.has(g), tg(G.genres, g)); }));
+  if (state.games.length) row("Игры из базы", state.games.map(g => chip(g.name, G.games.has(g.id), tg(G.games, g.id))));
+  if (state.insights.length) {
+    const tools = [];
+    const picked = state.insights.filter(taken);
+    if (picked.length) tools.push(chip("Взять из квест-лога (" + picked.length + ")", false, () => picked.forEach(i => G.ins.add(i.id)), "--take"));
+    if (n) tools.push(chip("Сбросить всё", false, () => { G.genres.clear(); G.games.clear(); G.ins.clear(); }));
+    const c = row("Отзывы", tools);
+    const lst = el("div", "chips ins-list");
+    TABS.forEach(t => scoped().concat().filter(i => t[3].includes(i.type)).forEach(i => {
+      const short = i.text.length > 70 ? i.text.slice(0, 68).trim() + "…" : i.text;
+      lst.append(chip(short, G.ins.has(i.id), tg(G.ins, i.id), t[2], t[1] + ": " + i.text));
+    }));
+    c.parentElement.append(lst);
+  }
+}
+
 /* ---------- render ---------- */
-function renderSnd() { const b = $("sndBtn"); b.setAttribute("aria-pressed", String(pref.sound)); b.textContent = pref.sound ? "♪ Звук" : "✕ Без звука"; b.setAttribute("aria-label", pref.sound ? "Выключить звуки" : "Включить звуки"); }
+function renderSnd() { const b = $("sndBtn"); b.setAttribute("aria-pressed", String(pref.sound)); b.innerHTML = sprite(pref.sound ? "spk" : "mute", 24); const l = pref.sound ? "Выключить звук" : "Включить звук"; b.setAttribute("aria-label", l); b.title = l; }
+$("setBtn").innerHTML = sprite("gear", 24);
 function renderGames() {
   const g = $("games"); g.replaceChildren();
   const mk = (id, label, pct) => {
@@ -445,7 +728,7 @@ function renderList() {
   const max = Math.max(...items.map(i => i.share || 0), 1);
   items.forEach((i, n) => box.append(card(i, n, max)));
 }
-function renderAll() { renderGames(); renderGameCard(); renderQuest(); renderTabs(); renderList(); }
+function renderAll() { renderGames(); renderGameCard(); renderQuest(); renderTabs(); renderList(); renderIngr(); }
 
 /* ---------- settings ---------- */
 const PALS = [["arcade", "Аркада", ["#0b0d1a", "#ff4fa3", "#3ddc84", "#4cc9f0"]], ["sunset", "Закат", ["#1a0b2e", "#ff7edb", "#72f1b8", "#fede5d"]],
@@ -466,11 +749,12 @@ $("sndBtn").onclick = () => { pref.sound = !pref.sound; savePref(); renderSnd();
 let qTimer; $("q").addEventListener("input", e => { clearTimeout(qTimer); qTimer = setTimeout(() => { state.q = e.target.value.trim(); state.animate = false; renderTabs(); renderList(); }, 120); });
 $("copyBtn").onclick = async () => { try { await navigator.clipboard.writeText($("phraseText").textContent); $("copyBtn").textContent = "Скопировано"; sfx.jingle(); } catch { const r = document.createRange(); r.selectNodeContents($("phraseText")); const s = getSelection(); s.removeAllRanges(); s.addRange(r); } };
 
-renderSnd(); renderAll();
+renderSnd(); renderGenHead(); renderReels(); renderGenOut(); renderAll();
 (async () => {
   const c = window.claude; const db = c ? await c.use("db") : null;
   if (!db) { $("list").replaceChildren(el("div", "empty px", "База недоступна в этом окне. Откройте страницу на claude.ai, войдя в аккаунт.")); return; }
   state.db = db;
+  c.use("sample").then(s => { if (s) { sampleFn = s; renderGenOut(); } }).catch(() => {});
   const user = await c.use("user"); const cw = user ? await user.can("data.write") : null; state.canWrite = cw !== false;
   const t = setTimeout(() => { if (!state.insights.length) $("list").replaceChildren(el("div", "empty px", "База пока не загрузилась. Проверьте соединение: страница обновится сама.")); }, 10000);
   let first = true;
