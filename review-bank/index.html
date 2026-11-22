@@ -64,8 +64,16 @@ h1 { font: 400 clamp(22px, 4.6vw, 40px)/1.35 var(--f-pixel); margin: 10px 0 0; l
 .monster:focus-visible { outline: 3px solid var(--accent); outline-offset: 4px; }
 .monster.jump { animation: mjump .45s steps(5); }
 @keyframes mjump { 20% { transform: scale(1.15, .8); } 50% { transform: translateY(-22px) scale(.9, 1.1); } 80% { transform: scale(1.1, .9); } }
-.eyes { transform-box: fill-box; transform-origin: center; animation: eyeblink 4.2s steps(1) infinite; }
-@keyframes eyeblink { 0%, 94% { transform: none; } 95%, 98% { transform: scaleY(.15); } }
+.eyes { transform-box: fill-box; transform-origin: center; animation: eyeblink 3.6s steps(1) infinite; }
+@keyframes eyeblink { 0%, 84% { transform: none; } 85%, 87% { transform: scaleY(.15); } 88%, 92% { transform: none; } 93%, 95% { transform: scaleY(.15); } 96%, 100% { transform: none; } }
+.pupils { animation: look 9s steps(1) infinite; }
+@keyframes look { 0%, 30% { transform: none; } 31%, 42% { transform: translateX(-1px); } 43%, 55% { transform: none; } 56%, 66% { transform: translateX(1px); } 67%, 74% { transform: translateY(-1px); } 75%, 100% { transform: none; } }
+.monster svg .body { transform-box: fill-box; transform-origin: 50% 100%; animation: breathe 1.8s steps(2) infinite; }
+@keyframes breathe { 50% { transform: scale(1.04, .95); } }
+.monster svg .horns { animation: wiggle 2.6s steps(1) infinite; }
+@keyframes wiggle { 0%, 60% { transform: none; } 61%, 70% { transform: translateY(-1px); } 71%, 80% { transform: none; } 81%, 88% { transform: translateY(-1px); } 89%, 100% { transform: none; } }
+.monster.talk svg .body { animation: chat .18s steps(2) 6; }
+@keyframes chat { 50% { transform: scale(.97, 1.06); } }
 .bubble { position: absolute; right: calc(100% + 16px); top: -4px; width: max-content; max-width: 250px; background: var(--dlg); --pl: var(--dlg-line); padding: 10px 13px; font: 500 .92rem/1.45 var(--f-body); color: var(--ink); z-index: 3; visibility: hidden; }
 .bubble.show { visibility: visible; animation: popin .2s steps(3); }
 .bubble::after { content: ""; position: absolute; right: -12px; top: 22px; width: 6px; height: 6px; background: var(--dlg-line); box-shadow: 4px 4px 0 var(--dlg-line); }
@@ -462,20 +470,20 @@ const MAPS = {
 /* the monster "Бит": 12x12, b body, h highlight, d shade, w eye white, k pupil, o horn, r mouth, t tooth */
 const MONSTER = ["..o......o..", "..oo....oo..", "...bbbbbb...", "..bhhbbbbbb.", ".bhbbbbbbbbd", ".bwkwbbwkwbd", ".bwkwbbwkwbd", ".bbbbbbbbbbd", ".bbrrrrrrbbd", ".bbrtrrtrbbd", "..bbbbbbbbd.", "..bbd..bbd.."];
 function monsterSvg() {
-  let base = "", eyes = "";
+  let base = "", eyes = "", pupils = "", horns = "";
   const R = (x, y, f, o) => `<rect x="${x}" y="${y}" width="1" height="1" style="fill:${f}"${o ? ` fill-opacity="${o}"` : ""}/>`;
   MONSTER.forEach((row, y) => [...row].forEach((ch, x) => {
     if (ch === ".") return;
-    if ("bhdwk".includes(ch)) base += R(x, y, "currentColor");
+    if ("bhd".includes(ch)) base += R(x, y, "currentColor");
     if (ch === "h") base += R(x, y, "#fff", .5);
     if (ch === "d") base += R(x, y, "#000", .35);
-    if (ch === "o") base += R(x, y, "var(--take)");
+    if (ch === "o") horns += R(x, y, "var(--take)");
     if (ch === "r") base += R(x, y, "#3a0d1f");
     if (ch === "t") base += R(x, y, "#fff");
     if (ch === "w") eyes += R(x, y, "#fff");
-    if (ch === "k") eyes += R(x, y, "#14121f");
+    if (ch === "k") { eyes += R(x, y, "#fff"); pupils += R(x, y, "#14121f"); }
   }));
-  return `<svg viewBox="0 0 12 12" aria-hidden="true">${base}<g class="eyes">${eyes}</g></svg>`;
+  return `<svg viewBox="0 0 12 12" aria-hidden="true"><g class="horns">${horns}</g><g class="body">${base}<g class="eyes">${eyes}<g class="pupils">${pupils}</g></g></g></svg>`;
 }
 function sprite(name, size = 24) {
   let r = "";
@@ -622,13 +630,24 @@ function say(text, src) {
 }
 $("monster").innerHTML = monsterSvg();
 $("monster").addEventListener("click", () => {
-  if (!quoteBag.length) quoteBag = QUOTES.map((_, i) => i).sort(() => Math.random() - 0.5);
-  const [t, src] = QUOTES[quoteBag.pop()];
+  const [t, src] = nextQuote();
   sfx.chirp(); say(t, src);
   const m = $("monster"); m.classList.remove("jump"); void m.offsetWidth; m.classList.add("jump");
 });
 $("monster").addEventListener("animationend", (e) => { if (e.animationName === "mjump") $("monster").classList.remove("jump"); });
 setTimeout(() => { if (!$("bubble").classList.contains("show")) say("Привет! Я Бит. Ткни меня — скажу что-нибудь умное.", null); }, 1400);
+function nextQuote() { if (!quoteBag.length) quoteBag = QUOTES.map((_, i) => i).sort(() => Math.random() - 0.5); return QUOTES[quoteBag.pop()]; }
+/* Bit talks by himself now and then: every 25–45 s, only while the page is visible and nothing else is open */
+(function chatter() {
+  setTimeout(() => {
+    const busy = document.visibilityState !== "visible" || $("bubble").classList.contains("show") || document.querySelector("dialog[open]");
+    if (pref.chatty !== false && !busy) {
+      const [t, src] = nextQuote(); say(t, src);
+      const m = $("monster"); m.classList.remove("talk"); void m.offsetWidth; m.classList.add("talk"); setTimeout(() => m.classList.remove("talk"), 1200);
+    }
+    chatter();
+  }, 25000 + Math.random() * 20000);
+})();
 
 /* ---------- game constructor: genre + up to two mechanics + setting, templates filled from the setting ----------
    setting fields: hero (им.), allies / enemies (род. мн., одушевлённые: годится и для вин.), enemiesN (им. мн.),
@@ -960,13 +979,23 @@ async function improve() {
 }
 
 /* ---------- confirmation: window.confirm() is blocked in the artifact frame, so ask in our own dialog ---------- */
+let lastPointY = null;
+document.addEventListener("pointerdown", (e) => { lastPointY = e.clientY; }, { capture: true });
+function showNear(d) {
+  const a = document.activeElement, r = a && a !== document.body ? a.getBoundingClientRect() : null;
+  const y = r && r.height ? r.top + r.height / 2 : lastPointY != null ? lastPointY : innerHeight / 2;
+  d.showModal();
+  const h = d.offsetHeight, vh = innerHeight;
+  d.style.position = "fixed"; d.style.inset = "auto 0 auto 0"; d.style.margin = "0 auto";
+  d.style.top = Math.max(12, Math.min(vh - h - 12, y - h / 2)) + "px";
+}
 function ask(text, hint, ok = "Удалить") {
   return new Promise(res => {
     const d = $("askDlg"); $("askText").textContent = text; $("askHint").textContent = hint || ""; $("askOk").textContent = ok;
     const done = (v) => { d.close(); res(v); };
     $("askOk").onclick = () => done(true); $("askNo").onclick = () => done(false);
     d.oncancel = (e) => { e.preventDefault(); done(false); };
-    sfx.open(); d.showModal(); $("askNo").focus();
+    sfx.open(); showNear(d); $("askNo").focus();
   });
 }
 const SOFT = "Запись останется в базе — её можно вернуть из корзины.";
@@ -1126,7 +1155,8 @@ function zoom(it) {
   const im = el("img"); im.src = it.img; im.alt = it.title + ": " + it.prompt;
   const close = el("button", "x", "✕"); close.type = "button"; close.setAttribute("aria-label", "Закрыть"); close.onclick = () => dlg.close();
   const cap = el("p", null, it.title);
-  dlg.append(close, im, cap); dlg.showModal(); sfx.open();
+  dlg.append(close, im, cap); showNear(dlg); sfx.open();
+  im.onload = () => { if (dlg.open) { const vh = innerHeight, h = dlg.offsetHeight, top = parseFloat(dlg.style.top) || 12; if (top + h > vh - 12) dlg.style.top = Math.max(12, vh - h - 12) + "px"; } };
 }
 function renderIngr() {
   const n = G.games.size + G.ins.size;
@@ -1501,10 +1531,10 @@ function opt(label, on, fn, sw) { const b = el("button", "pbtn px"); b.type = "b
 function renderSettings() {
   $("optPal").replaceChildren(...PALS.map(([id, l, sw]) => opt(l, pref.pal === id, () => pref.pal = id, sw)));
   $("optSize").replaceChildren(...[["s", "Мелкий"], ["m", "Средний"], ["l", "Крупный"]].map(([id, l]) => opt(l, pref.size === id, () => pref.size = id)));
-  $("optFx").replaceChildren(opt("Анимации", pref.motion, () => pref.motion = !pref.motion), opt("Полосы ЭЛТ", pref.scan, () => pref.scan = !pref.scan), opt("Звук", pref.sound, () => pref.sound = !pref.sound));
+  $("optFx").replaceChildren(opt("Анимации", pref.motion, () => pref.motion = !pref.motion), opt("Полосы ЭЛТ", pref.scan, () => pref.scan = !pref.scan), opt("Звук", pref.sound, () => pref.sound = !pref.sound), opt("Бит болтает", pref.chatty !== false, () => pref.chatty = pref.chatty === false));
   $("vol").value = pref.vol;
 }
-$("setBtn").onclick = () => { sfx.open(); renderSettings(); $("setDlg").showModal(); };
+$("setBtn").onclick = () => { sfx.open(); renderSettings(); showNear($("setDlg")); };
 $("setClose").onclick = () => { sfx.click(); $("setDlg").close(); };
 $("setDlg").addEventListener("click", (e) => { if (e.target === $("setDlg")) $("setDlg").close(); });
 $("vol").addEventListener("input", (e) => { pref.vol = +e.target.value; savePref(); });

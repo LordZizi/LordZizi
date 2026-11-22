@@ -8,12 +8,12 @@
   - `data/games.json`, `data/insights.json`, `data/parts.json` - выгрузка базы (ключ - id документа);
   - `games/<игра>.md` - читаемый разбор каждой игры;
   - `tools/` - скачивание отзывов Steam (`community_paged.py`) и выгрузка базы (`export_db.py`);
-  - `skill/game-constructor/` - скилл для Claude: как пополнять конструктор. ZIP для установки на claude.ai: `../skills-zip/game-constructor.zip` (Customize → Skills → Upload).
+  - `../.claude/skills/game-constructor/` - скилл для Claude: как пополнять конструктор. Claude Code видит его в любой сессии и ветке этого репозитория сам; ZIP для claude.ai: `../skills-zip/game-constructor.zip` (Customize → Skills → Upload).
 
 ## Как пополнять
 
 - **На странице:** раздел «Мастерская» - вкладки Игра, Отзыв, Жанр, Механика, Сеттинг, «Из игры-референса» (Claude предлагает механики и жанры игры) и «Мои добавления» (удаление).
-- **Через Claude:** «Разбери отзывы игры НАЗВАНИЕ в банк отзывов и добавь её механики в конструктор». Подробный порядок и форматы - в `skill/game-constructor/SKILL.md`.
+- **Через Claude:** «Разбери отзывы игры НАЗВАНИЕ в банк отзывов и добавь её механики в конструктор». Подробный порядок и форматы - в `.claude/skills/game-constructor/SKILL.md`.
 - **Встроенные списки:** правка `index.html`, публикация на тот же url, коммит.
 
 ## Как добавить игру (подробно)

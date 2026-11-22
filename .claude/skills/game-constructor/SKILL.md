@@ -22,13 +22,13 @@ license: MIT
 - Удаление мягкое: у документа в games, insights, parts или ideas ставится `deleted: true` (и deletedAt) - страница его прячет, но он остаётся в базе, и его можно вернуть из корзины («Мои идеи» → Корзина, «Мастерская» → «Мои добавления» → Корзина). Отзывы удалённой игры тоже скрываются. Документы не удалять насовсем без прямой просьбы пользователя; при выгрузке и чтении учитывать флаг deleted.
 - На странице нельзя использовать window.confirm/alert/prompt - они заблокированы в окне артефакта; подтверждение - через собственный диалог.
 - `review-bank/data/*.json` - выгрузка базы для других веток. `games/*.md` - читаемые разборы игр.
-- `scripts/` (и `review-bank/tools/`) - скачивание отзывов Steam и выгрузка базы.
+- `.claude/skills/game-constructor/` - этот скилл (Claude Code подхватывает его в любой сессии и ветке этого репозитория); `scripts/` в нём и `review-bank/tools/` - скачивание отзывов Steam и выгрузка базы.
 
 ## Добавить игру и её отзывы («Разбери отзывы игры X в банк отзывов»)
 
 1. Найти AppID и общую оценку (скилл steam-reviews, если есть).
 2. Скачать отзывы. API `store.steampowered.com/appreviews` из облака часто отвечает переадресацией - тогда страницы сообщества:
-   `python3 scripts/community_paged.py APPID out.jsonl` (нужен доступ к steamcommunity.com).
+   `python3 .claude/skills/game-constructor/scripts/community_paged.py APPID out.jsonl` (нужен доступ к steamcommunity.com).
 3. Прочитать отзывы, выделить темы. По 5-8 строк на каждый type, текст строки - одна понятная фраза по-русски, share - доля выборки, 1-2 цитаты с ссылками.
 4. Записать одним batch в ArtifactData: `games/<slug>` и `insights/<префикс>-NN`. Для существующих документов передавать if_version.
 5. Если просят - сразу добавить механики и жанры игры в `parts` (раздел ниже, src = id игры).
@@ -72,5 +72,5 @@ license: MIT
 ## Синхронизация базы с репозиторием
 
 1. ArtifactData list для games, insights, parts с out_dir во временную папку.
-2. `python3 scripts/export_db.py ПАПКА review-bank/data` (или `review-bank/tools/export_db.py ПАПКА`).
+2. `python3 review-bank/tools/export_db.py ПАПКА` (или `.claude/skills/game-constructor/scripts/export_db.py ПАПКА review-bank/data`).
 3. Закоммитить `review-bank/data/*.json`.
