@@ -2,240 +2,479 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@500;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;700&family=Press+Start+2P&family=Fira+Code:wght@500;700&family=Fira+Sans:wght@400;500;600&family=Lora:wght@600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Rubik:wght@400;500;600;700&display=swap">
 <style>
-/* Layout: title + game chips -> "take into my game" list -> four short columns (liked / disliked / asked / takeaways), top 5 each, quotes on demand. Data lives in db. */
+/* Retro-game look in the spirit of the skills catalog: hero with floating pixel sprites that play notes,
+   tabs instead of four cramped columns, cards in two readable columns, quest log for "use in my game",
+   chiptune sounds (Web Audio), pixel borders, optional CRT scanlines. Data lives in db. */
 :root {
-  --bg: #f4f2ee; --surface: #ffffff; --surface-2: #efece6; --line: #dcd6cc;
-  --ink: #1c1a17; --ink-2: #5f5a52; --accent: #c2410c;
-  --like: #15803d; --dislike: #b91c1c; --request: #1d4ed8; --take: #a16207;
-  --f-display: "Rubik", "Segoe UI", system-ui, sans-serif;
-  --f-body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --f-mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+  --bg: #0b0d1a; --surface: #151933; --surface-2: #1f2448; --line: #343b7a; --shadow: #05060d;
+  --ink: #f4f1ff; --ink-2: #aeb0d8; --accent: #ff4fa3; --on-c: #0b0d1a; --dlg: #070814; --dlg-line: #f4f1ff;
+  --like: #3ddc84; --dislike: #ff5470; --request: #4cc9f0; --take: #ffcc33;
+  --f-pixel: "Press Start 2P", monospace;
+  --f-head: "Rubik", system-ui, sans-serif;
+  --f-body: "Rubik", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --scan: rgba(0,0,0,.16); color-scheme: dark;
 }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
-  --bg: #15130f; --surface: #1e1b16; --surface-2: #27231c; --line: #3a342a;
-  --ink: #f3eee6; --ink-2: #b3aa9b; --accent: #fb923c;
-  --like: #4ade80; --dislike: #f87171; --request: #60a5fa; --take: #facc15; color-scheme: dark } }
-:root[data-theme="dark"] {
-  --bg: #15130f; --surface: #1e1b16; --surface-2: #27231c; --line: #3a342a;
-  --ink: #f3eee6; --ink-2: #b3aa9b; --accent: #fb923c;
-  --like: #4ade80; --dislike: #f87171; --request: #60a5fa; --take: #facc15; color-scheme: dark }
-/* Palettes (chosen per viewer, saved in localStorage). "paper" follows the system theme; the others are fixed. */
-:root[data-palette="arcade"] { --bg: #0b1120; --surface: #131c31; --surface-2: #1c2741; --line: #26324d; --ink: #f1f5f9; --ink-2: #9fb0c8; --accent: #f43f5e; --like: #4ade80; --dislike: #fb7185; --request: #38bdf8; --take: #fbbf24; color-scheme: dark; }
-:root[data-palette="dusk"] { --bg: #100e22; --surface: #1a1733; --surface-2: #24204a; --line: #332c63; --ink: #ece9ff; --ink-2: #a9a3cf; --accent: #a78bfa; --like: #34d399; --dislike: #fb7185; --request: #7dd3fc; --take: #fcd34d; color-scheme: dark; }
-:root[data-palette="lab"] { --bg: #f3f6fa; --surface: #ffffff; --surface-2: #e8eef5; --line: #cfd8e3; --ink: #0f1b2d; --ink-2: #4a5a70; --accent: #1e3a5f; --like: #047857; --dislike: #b42318; --request: #1d4ed8; --take: #a16207; color-scheme: light; }
-:root[data-palette="meadow"] { --bg: #eef3e6; --surface: #fbfdf7; --surface-2: #e2ebd3; --line: #c9d6b4; --ink: #1d2a17; --ink-2: #53634a; --accent: #b4531a; --like: #3f7d20; --dislike: #b3261e; --request: #2a6f97; --take: #8a6a00; color-scheme: light; }
-:root[data-fonts="pixel"] { --f-display: "Press Start 2P", "Rubik", system-ui, sans-serif; }
-:root[data-fonts="data"] { --f-display: "Fira Code", ui-monospace, monospace; --f-body: "Fira Sans", system-ui, sans-serif; --f-mono: "Fira Code", ui-monospace, monospace; }
-:root[data-fonts="book"] { --f-display: "Lora", Georgia, serif; }
+:root[data-pal="screen"] { --bg: #0e2410; --surface: #163418; --surface-2: #1f4521; --line: #3f6f2a; --shadow: #050f06;
+  --ink: #e3f7c8; --ink-2: #a7c98b; --accent: #c6e35a; --on-c: #0e2410; --dlg: #081709; --dlg-line: #c6e35a;
+  --like: #9be05a; --dislike: #f0b86a; --request: #7fd8c0; --take: #f2f08a; --scan: rgba(0,0,0,.2); }
+:root[data-pal="sunset"] { --bg: #1a0b2e; --surface: #271345; --surface-2: #341a5c; --line: #5a2f8f; --shadow: #0a0414;
+  --ink: #fff0fb; --ink-2: #cfb3e6; --accent: #ff7edb; --on-c: #1a0b2e; --dlg: #10061e; --dlg-line: #ff7edb;
+  --like: #72f1b8; --dislike: #fe4450; --request: #36f9f6; --take: #fede5d; }
+:root[data-pal="cart"] { --bg: #e6e0d2; --surface: #f8f4ea; --surface-2: #ece5d4; --line: #2b2a33; --shadow: #2b2a33;
+  --ink: #1d1c22; --ink-2: #55525e; --accent: #c2185b; --on-c: #ffffff; --dlg: #ffffff; --dlg-line: #2b2a33;
+  --like: #2e7d32; --dislike: #c62828; --request: #1565c0; --take: #8d6200; --scan: rgba(0,0,0,.05); color-scheme: light; }
+:root[data-size="s"] { font-size: 15px; }
+:root[data-size="m"] { font-size: 17px; }
+:root[data-size="l"] { font-size: 19px; }
 * { box-sizing: border-box; }
-body { background: var(--bg); color: var(--ink); font: 15px/1.5 var(--f-body); }
-.wrap { max-width: 1180px; margin: 0 auto; padding-block: 28px 72px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 22px; }
+html { background: var(--bg); }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 400 1rem/1.6 var(--f-body); }
+:root.scan body::after { content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 50;
+  background: repeating-linear-gradient(180deg, transparent 0 2px, var(--scan) 2px 3px), radial-gradient(ellipse at center, transparent 60%, rgba(0,0,0,.18) 100%); }
+.wrap { max-width: 1000px; margin: 0 auto; padding-block: 24px 80px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 26px; }
 button, input { font: inherit; color: inherit; }
-:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-.kicker { font: 700 11px var(--f-mono); letter-spacing: .14em; text-transform: uppercase; color: var(--accent); }
-h1 { font: 800 clamp(30px, 5vw, 46px)/1.05 var(--f-display); margin: 6px 0 0; letter-spacing: -.02em; text-wrap: balance; }
-:root[data-fonts="pixel"] h1 { font-size: clamp(22px, 3.6vw, 34px); line-height: 1.3; letter-spacing: 0; font-weight: 400; }
-:root[data-fonts="pixel"] .kicker, :root[data-fonts="pixel"] .mine h2, :root[data-fonts="pixel"] .col h2 { font-family: var(--f-display); font-size: 9px; letter-spacing: .06em; font-weight: 400; line-height: 1.6; }
-:root[data-fonts="pixel"] .rank { font: 400 9px var(--f-display); }
-.top { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; gap: 16px; }
-.look { display: grid; gap: 8px; justify-items: end; }
-.look-row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
-.look-row > span { font: 700 10px var(--f-body); letter-spacing: .12em; text-transform: uppercase; color: var(--ink-2); margin-right: 4px; }
-.sw { width: 34px; height: 34px; border-radius: 10px; border: 1px solid var(--line); cursor: pointer; padding: 0; display: grid; grid-template-columns: 1fr 1fr; overflow: hidden; background: none; }
-.sw i { display: block; }
-.sw[aria-pressed="true"] { outline: 2px solid var(--ink); outline-offset: 2px; }
-.fbtn { min-height: 34px; padding: 4px 10px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); cursor: pointer; font-size: 13px; }
-.fbtn[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
-@media (max-width: 640px) { .look { justify-items: start; } .look-row { justify-content: flex-start; } }
-.lead { margin: 8px 0 0; color: var(--ink-2); max-width: 62ch; }
-.bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
-.game { display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 6px 12px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); cursor: pointer; font-weight: 600; }
-.game small { font: 700 12px var(--f-mono); color: var(--like); }
-.game[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+
+/* pixel frame: notched corners from four flat shadows plus a stepped drop shadow */
+.px { --pl: var(--line); border: 0; margin: 3px; box-shadow: 0 -3px 0 0 var(--pl), 0 3px 0 0 var(--pl), -3px 0 0 0 var(--pl), 3px 0 0 0 var(--pl), 3px 6px 0 0 var(--shadow), 6px 3px 0 0 var(--shadow); }
+.pbtn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 6px 14px; background: var(--surface-2); cursor: pointer; font: 600 1rem var(--f-head); transition: transform .08s steps(2), box-shadow .08s steps(2), background-color .15s; }
+.pbtn:hover { background: color-mix(in srgb, var(--accent) 18%, var(--surface-2)); }
+.pbtn:active { transform: translate(3px, 3px); box-shadow: 0 -3px 0 0 var(--pl), 0 3px 0 0 var(--pl), -3px 0 0 0 var(--pl), 3px 0 0 0 var(--pl); }
+.spr { display: inline-block; flex: none; }
+.spr rect { shape-rendering: crispEdges; }
+
+/* hero */
+.hero { position: relative; overflow: hidden; background: radial-gradient(520px 260px at 0% 0%, color-mix(in srgb, var(--accent) 18%, transparent), transparent 65%), radial-gradient(500px 260px at 100% 100%, color-mix(in srgb, var(--request) 14%, transparent), transparent 65%), var(--surface); padding: 26px 24px; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 18px 24px; }
+.eyebrow { display: flex; align-items: center; gap: 8px; font: 600 .82rem var(--f-head); letter-spacing: .12em; text-transform: uppercase; color: var(--accent); }
+.cursor { display: inline-block; width: .6em; height: 1em; background: currentColor; animation: blink 1s steps(1) infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+h1 { font: 400 clamp(22px, 4.6vw, 40px)/1.35 var(--f-pixel); margin: 10px 0 0; letter-spacing: .02em; text-shadow: 3px 3px 0 var(--accent), 6px 6px 0 var(--shadow); }
+.lead { margin: 12px 0 0; color: var(--ink-2); max-width: 54ch; }
+.tools { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+.tools .pbtn { font-size: .95rem; }
+.snd[aria-pressed="false"] { color: var(--ink-2); }
+.sprites { display: grid; grid-template-columns: repeat(4, 44px); gap: 22px 16px; align-content: center; transform: rotate(-6deg); }
+.sprite { all: unset; width: 44px; height: 44px; display: grid; place-items: center; cursor: pointer; --off: 0px; animation: bob 1.6s steps(2) infinite; transform: translateY(var(--off)); }
+.sprite:nth-child(2n) { --off: 12px; animation-duration: 2.1s; }
+.sprite:nth-child(3n) { animation-delay: -.7s; }
+.sprite svg { width: 40px; height: 40px; filter: drop-shadow(3px 3px 0 var(--shadow)); }
+.sprite.hop { animation: hop .32s steps(4); }
+@keyframes bob { 50% { transform: translateY(calc(var(--off) - 6px)); } }
+@keyframes hop { 0%, 100% { transform: translateY(var(--off)) scale(1); } 40% { transform: translateY(calc(var(--off) - 18px)) scale(1.2); } }
+@media (max-width: 760px) { .hero { grid-template-columns: 1fr; } .sprites { display: none; } }
+
+/* game chips + search */
+.bar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.game { font-size: .95rem; }
+.game small { font: 400 9px var(--f-pixel); color: var(--like); }
+.game[aria-pressed="true"] { background: var(--ink); color: var(--bg); --pl: var(--ink); }
 .game[aria-pressed="true"] small { color: inherit; }
-.search { flex: 1 1 220px; max-width: 320px; min-height: 40px; padding: 8px 12px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); }
-.summary { margin: 0; padding: 12px 16px; border-left: 3px solid var(--accent); background: var(--surface); border-radius: 0 10px 10px 0; color: var(--ink-2); font-size: 14px; }
-.mine { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; display: grid; gap: 8px; }
-.mine h2, .col h2 { font: 700 12px var(--f-mono); letter-spacing: .12em; text-transform: uppercase; margin: 0; display: flex; align-items: center; gap: 8px; }
-.mine h2 { color: var(--like); }
-.mine ul { margin: 0; padding-left: 20px; display: grid; gap: 4px; }
-.mine li span { color: var(--ink-2); font-size: 13px; }
-.mine p { margin: 0; color: var(--ink-2); font-size: 14px; }
-.cols { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; align-items: start; }
-@media (max-width: 980px) { .cols { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-@media (max-width: 560px) { .cols { grid-template-columns: 1fr; } }
-.col { --c: var(--ink-2); background: var(--surface); border: 1px solid var(--line); border-top: 3px solid var(--c); border-radius: 12px; padding: 12px 12px 8px; display: grid; gap: 6px; min-width: 0; }
-.col h2 { color: var(--c); }
-.col h2 svg { width: 16px; height: 16px; flex: none; }
-.col h2 b { margin-left: auto; }
-.col { background: linear-gradient(180deg, color-mix(in srgb, var(--c) 7%, var(--surface)) 0, var(--surface) 64px); }
-.bar-share { display: inline-block; width: 44px; height: 4px; border-radius: 2px; background: var(--surface-2); overflow: hidden; vertical-align: middle; }
-.bar-share i { display: block; height: 100%; background: var(--c); border-radius: 2px; }
-.rank { font: 700 11px var(--f-mono); color: var(--c); opacity: .8; margin-right: 6px; }
-.col h2 b { font: 700 12px var(--f-mono); color: var(--ink-2); }
-.row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px; padding: 8px 4px; border-top: 1px solid var(--line); }
-.row:first-of-type { border-top: 0; }
-.row-text { all: unset; cursor: pointer; font-size: 14px; line-height: 1.4; }
-.row-text:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
-.row-meta { display: flex; flex-wrap: wrap; gap: 2px 8px; align-items: center; margin-top: 3px; font: 600 11px var(--f-mono); color: var(--ink-2); }
-.row-meta span { white-space: nowrap; }
-.row .quotes { grid-column: 1 / -1; display: grid; gap: 6px; margin: 2px 0 2px 2px; }
-.row blockquote { margin: 0; padding-left: 8px; border-left: 2px solid var(--line); font-size: 13px; color: var(--ink-2); }
-.row blockquote a { color: inherit; }
-.tick { width: 30px; height: 30px; border-radius: 8px; border: 1px solid var(--line); background: transparent; cursor: pointer; display: grid; place-items: center; color: transparent; }
-.tick:hover { border-color: var(--like); }
-.tick, .game, .fbtn, .sw, .phrase button { transition: background-color .15s ease, border-color .15s ease, color .15s ease, transform .1s ease; }
-.tick:active, .game:active, .fbtn:active { transform: scale(.96); }
-.row { transition: background-color .15s ease; border-radius: 8px; }
-.row:hover { background: color-mix(in srgb, var(--c) 6%, transparent); }
-@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
-.tick[aria-pressed="true"] { background: var(--like); border-color: var(--like); color: var(--bg); }
-.tick svg { width: 16px; height: 16px; }
-.more { all: unset; cursor: pointer; font: 600 13px var(--f-body); color: var(--accent); padding: 6px 4px; }
-.empty { padding: 20px; border: 1px dashed var(--line); border-radius: 12px; color: var(--ink-2); }
-.foot { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 14px; color: var(--ink-2); }
-.phrase { display: inline-flex; align-items: center; gap: 8px; font: 500 13px var(--f-mono); background: var(--surface-2); padding: 5px 6px 5px 10px; border-radius: 8px; color: var(--ink); }
-.phrase button { min-height: 28px; padding: 2px 10px; border-radius: 6px; border: 1px solid var(--line); background: var(--surface); cursor: pointer; font: 600 12px var(--f-body); white-space: nowrap; }
+.search { flex: 1 1 220px; max-width: 360px; min-height: 44px; padding: 8px 14px; background: var(--surface); font-size: 1rem; }
+.search::placeholder { color: var(--ink-2); }
+
+/* game card */
+.gamecard { background: var(--surface); padding: 20px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); gap: 22px 26px; }
+@media (max-width: 760px) { .gamecard { grid-template-columns: 1fr; } }
+.gc-name { font: 400 clamp(14px, 2.2vw, 18px)/1.5 var(--f-pixel); margin: 0; }
+.gc-sub { color: var(--ink-2); font-size: .9rem; margin: 6px 0 14px; }
+.stat { display: grid; grid-template-columns: 6.5em minmax(0, 1fr) auto; align-items: center; gap: 10px; margin-top: 8px; font: 600 .9rem var(--f-head); }
+.stat b { font: 400 10px var(--f-pixel); }
+.meter { display: block; height: 14px; background: var(--surface-2); box-shadow: 0 0 0 2px var(--line); position: relative; overflow: hidden; }
+.meter i { position: absolute; inset: 0 auto 0 0; background: repeating-linear-gradient(90deg, var(--c, var(--like)) 0 8px, transparent 8px 10px); }
+.enter .meter i, .gamecard .meter i { animation: fill .7s steps(10) both; }
+@keyframes fill { from { width: 0; } }
+.dialog { position: relative; background: var(--dlg); --pl: var(--dlg-line); padding: 20px 18px 16px; }
+.dialog .who { position: absolute; top: -12px; left: 14px; padding: 3px 10px; background: var(--dlg-line); color: var(--dlg); font: 400 9px/1.6 var(--f-pixel); }
+.dialog p { margin: 0; }
+
+/* quest log */
+.quest { background: var(--surface); padding: 18px 20px; display: grid; gap: 12px; }
+.quest-head { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; color: var(--take); }
+.quest h2 { font: 400 13px/1.6 var(--f-pixel); margin: 0; }
+.quest-head > span:not(:first-child) { color: var(--ink-2); font-size: .92rem; }
+.count { font: 400 10px var(--f-pixel); padding: 6px 9px; background: var(--take); color: var(--on-c); margin-left: auto; }
+.count.bump { animation: bump .4s steps(4); }
+@keyframes bump { 40% { transform: scale(1.35); } }
+.quest ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.quest li { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 8px 10px; background: var(--surface-2); }
+.quest li small { display: block; color: var(--ink-2); font-size: .82rem; }
+.quest p.empty-q { margin: 0; color: var(--ink-2); }
+.x { all: unset; cursor: pointer; width: 36px; height: 36px; display: grid; place-items: center; color: var(--ink-2); }
+.x:hover { color: var(--dislike); }
+.x:focus-visible { outline: 3px solid var(--accent); }
+
+/* tabs */
+.tabs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+@media (max-width: 640px) { .tabs { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.tab { --c: var(--ink-2); justify-content: flex-start; min-height: 56px; padding: 8px 12px; font-size: 1.02rem; background: var(--surface); }
+.tab .spr { width: 24px; height: 24px; color: var(--c); }
+.tab .n { margin-left: auto; font: 400 10px var(--f-pixel); color: var(--ink-2); }
+.tab[aria-selected="true"] { background: var(--c); color: var(--on-c); --pl: var(--c); }
+.tab[aria-selected="true"]:hover { background: var(--c); }
+.tab[aria-selected="true"] .spr, .tab[aria-selected="true"] .n { color: var(--on-c); }
+.tab-note { margin: -8px 0 0; color: var(--ink-2); font-size: .92rem; }
+
+/* cards */
+.list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; align-items: start; }
+@media (max-width: 760px) { .list { grid-template-columns: 1fr; } }
+@media (max-width: 520px) { .card { grid-template-columns: 1fr; } .pick { justify-self: start; } }
+.card { --c: var(--like); background: linear-gradient(90deg, var(--c) 0 5px, var(--surface) 5px); padding: 16px 16px 14px 22px; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px 14px; }
+.enter .card { animation: drop .36s steps(5) both; animation-delay: calc(var(--i) * 55ms); }
+@keyframes drop { from { opacity: 0; transform: translateY(14px); } }
+.rank { font: 400 11px var(--f-pixel); color: var(--c); }
+.card-text { margin: 6px 0 0; font-size: 1.02rem; line-height: 1.6; text-wrap: pretty; }
+.meta { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; font-size: .86rem; color: var(--ink-2); }
+.tag { font: 600 .82rem var(--f-head); padding: 2px 8px; background: var(--surface-2); color: var(--ink); }
+.xp { display: inline-flex; align-items: center; gap: 8px; }
+.xp .meter { width: 80px; height: 10px; }
+.qbtn { all: unset; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; font: 600 .9rem var(--f-head); color: var(--c); padding: 4px 0; min-height: 32px; }
+.qbtn:hover { text-decoration: underline; text-underline-offset: 4px; }
+.qbtn:focus-visible { outline: 3px solid var(--accent); }
+.pick { min-height: 40px; padding: 4px 10px 4px 6px; font-size: .9rem; align-self: start; white-space: nowrap; }
+.pick .box { width: 22px; height: 22px; display: grid; place-items: center; background: var(--bg); box-shadow: 0 0 0 2px var(--line); }
+.pick[aria-pressed="true"] { background: var(--take); color: var(--on-c); --pl: var(--take); }
+.pick[aria-pressed="true"] .box { background: var(--on-c); color: var(--take); box-shadow: none; }
+.quotes { grid-column: 1 / -1; display: grid; gap: 22px; margin-top: 14px; }
+.quotes .dialog { font-size: .96rem; cursor: default; }
+.quotes a { color: var(--request); font: 600 .86rem var(--f-head); display: inline-block; margin-top: 8px; }
+.lang { margin-left: 8px; opacity: .7; }
+.empty { padding: 26px; background: var(--surface); color: var(--ink-2); grid-column: 1 / -1; }
+.loading::after { content: "▌"; animation: blink 1s steps(1) infinite; }
+.pop { position: fixed; z-index: 60; pointer-events: none; font: 400 12px var(--f-pixel); color: var(--take); text-shadow: 2px 2px 0 var(--shadow); animation: pop .8s steps(8) forwards; }
+@keyframes pop { to { transform: translateY(-46px); opacity: 0; } }
+
+/* footer */
+.foot { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; color: var(--ink-2); font-size: .95rem; }
+.phrase { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 6px 6px 6px 12px; background: var(--surface); color: var(--ink); font: 600 .95rem var(--f-head); }
+.phrase .pbtn { min-height: 36px; font-size: .9rem; min-width: 140px; }
+
+/* settings */
+dialog.set { width: min(520px, calc(100vw - 32px)); background: var(--surface); color: var(--ink); padding: 22px; }
+dialog.set::backdrop { background: rgba(0,0,0,.6); }
+.set h2 { font: 400 13px/1.6 var(--f-pixel); margin: 0 48px 18px 0; }
+.set .x { position: absolute; top: 14px; right: 14px; }
+.field { display: grid; gap: 8px; margin-bottom: 18px; }
+.field > span { font: 600 .82rem var(--f-head); letter-spacing: .1em; text-transform: uppercase; color: var(--ink-2); }
+.opts { display: flex; flex-wrap: wrap; gap: 10px; }
+.opts .pbtn { font-size: .92rem; min-height: 40px; }
+.opts .pbtn[aria-pressed="true"] { background: var(--accent); color: var(--on-c); --pl: var(--accent); }
+.pal-sw { display: inline-grid; grid-template-columns: repeat(4, 7px); gap: 1px; }
+.pal-sw i { width: 7px; height: 14px; }
+.field input[type="range"] { accent-color: var(--accent); width: 100%; }
+:root.calm *, :root.calm *::before, :root.calm *::after { animation: none !important; transition: none !important; }
 </style>
 
 <div class="wrap">
-  <header class="top">
+  <header class="hero px">
     <div>
-      <div class="kicker">База знаний для моей 2D-игры</div>
-      <h1>Банк отзывов</h1>
-      <p class="lead">Главное из отзывов Steam о похожих играх. Отмечайте галочкой то, что стоит учесть в своей игре.</p>
+      <div class="eyebrow">База знаний для моей 2D-игры <span class="cursor" aria-hidden="true"></span></div>
+      <h1>Банк<br>отзывов</h1>
+      <p class="lead">Что игроки хвалят, ругают и просят в похожих играх. Нажимайте «Учесть» — выводы соберутся в квест-лог вашей игры.</p>
+      <div class="tools">
+        <button class="pbtn px snd" id="sndBtn" type="button" aria-pressed="true"></button>
+        <button class="pbtn px" id="setBtn" type="button">Настройки</button>
+      </div>
     </div>
-    <div class="look" aria-label="Оформление">
-      <div class="look-row" id="palettes"><span>Палитра</span></div>
-      <div class="look-row" id="fonts"><span>Шрифт</span></div>
-    </div>
+    <div class="sprites" id="sprites" aria-hidden="true"></div>
   </header>
 
-  <div class="bar"><div class="bar" id="games" aria-label="Игры"></div><input class="search" id="q" type="search" placeholder="Поиск" aria-label="Поиск по выводам"></div>
-  <p class="summary" id="summary" hidden></p>
+  <div class="bar"><div class="bar" id="games" aria-label="Игры"></div><input class="search px" id="q" type="search" placeholder="Поиск по отзывам" aria-label="Поиск по выводам и цитатам"></div>
 
-  <section class="mine" id="mine"></section>
-  <div class="cols" id="cols"><div class="empty">Загружаю базу…</div></div>
+  <section class="gamecard px" id="gamecard" hidden></section>
 
-  <footer class="foot">Добавить игру: напишите Claude <span class="phrase"><span id="phraseText">Разбери отзывы игры НАЗВАНИЕ в банк отзывов</span><button type="button" id="copyBtn">Копировать</button></span></footer>
+  <section class="quest px" id="quest" aria-labelledby="questTitle"></section>
+
+  <div class="tabs" role="tablist" id="tabs" aria-label="Разделы"></div>
+  <p class="tab-note" id="tabNote"></p>
+  <div class="list" id="list" role="tabpanel"><div class="empty px loading">Загружаю базу</div></div>
+
+  <footer class="foot">Добавить игру: напишите Claude <span class="phrase px"><span id="phraseText">Разбери отзывы игры НАЗВАНИЕ в банк отзывов</span><button class="pbtn px" type="button" id="copyBtn">Копировать</button></span></footer>
 </div>
 
+<dialog class="set px" id="setDlg" aria-labelledby="setTitle">
+  <h2 id="setTitle">Настройки</h2>
+  <button class="x" type="button" id="setClose" aria-label="Закрыть">✕</button>
+  <div class="field"><span>Палитра</span><div class="opts" id="optPal"></div></div>
+  <div class="field"><span>Размер текста</span><div class="opts" id="optSize"></div></div>
+  <div class="field"><span>Эффекты</span><div class="opts" id="optFx"></div></div>
+  <div class="field"><span>Громкость</span><input type="range" id="vol" min="0" max="1.5" step="0.05" aria-label="Громкость"></div>
+</dialog>
+
 <script>
-/* ideas from players count as "asked for" so there are four columns */
-const COLS = [["like", "Нравится", "--like", ["like"]], ["dislike", "Не нравится", "--dislike", ["dislike"]], ["request", "Просят", "--request", ["request", "idea"]], ["takeaway", "Выводы", "--take", ["takeaway"]]];
-const TOP = 5;
-const ICON = {
-  like: '<path d="M7 10v11"/><path d="M15 5.9 14 10h5.8a2 2 0 0 1 1.9 2.6l-2.3 7A2 2 0 0 1 17.5 21H4a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1h2.8a2 2 0 0 0 1.8-1.1L12 2a3.1 3.1 0 0 1 3 3.9Z"/>',
-  dislike: '<path d="M17 14V3"/><path d="M9 18.1 10 14H4.2a2 2 0 0 1-1.9-2.6l2.3-7A2 2 0 0 1 6.5 3H20a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1h-2.8a2 2 0 0 0-1.8 1.1L12 22a3.1 3.1 0 0 1-3-3.9Z"/>',
-  request: '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M12 7v4"/><path d="M12 14h.01"/>',
-  takeaway: '<path d="M9 18h6"/><path d="M10 22h4"/><path d="M15.1 14c.2-1 .7-1.7 1.4-2.5A4.6 4.6 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/>'
+/* ---------- pixel sprites: 8x8 maps, 1 = colour, 2 = highlight, 3 = shade ---------- */
+const MAPS = {
+  heart: [".11.11..", "1211111.", "1111111.", "1111113.", ".11113..", "..113...", "...1....", "........"],
+  broken: [".11.11..", "121.111.", "11.1111.", "111.113.", ".11.13..", "..1.3...", "...1....", "........"],
+  bubble: [".111111.", "12111113", "11.1.1.1", "11111113", ".111113.", "..11....", ".1......", "........"],
+  star: ["...11...", "...11...", "..1211..", "11121111", ".111113.", "..1111..", ".11..11.", ".1....1."],
+  coin: ["..1111..", ".121111.", "12113111", "12113111", "12113111", "11113311", ".111331.", "..1111.."],
+  gem: ["........", "..1111..", ".122111.", "12211113", ".111113.", "..1113..", "...13...", "........"],
+  potion: ["..3333..", "...11...", "...11...", "..1111..", ".121111.", ".111111.", ".111113.", "..1133.."],
+  key: [".111....", "1...1...", "1...1111", "1...1.1.", ".111..1.", "........", "........", "........"],
+  shield: ["11111111", "12111113", "12111113", "12111113", ".121113.", ".111113.", "..1113..", "...13..."],
+  check: ["........", "......11", ".....11.", "1...11..", "11.11...", ".111....", "..1.....", "........"]
 };
-const svg = (p) => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + p + '</svg>';
-const PALETTES = [
-  ["paper", "Бумага: тёплая, светлая и тёмная по системе", ["#f4f2ee", "#c2410c", "#15803d", "#1c1a17"]],
-  ["meadow", "Луг: зелень и терракота, как у уютных инди", ["#eef3e6", "#b4531a", "#3f7d20", "#2a6f97"]],
-  ["lab", "Лаборатория: строгая, для чтения", ["#f3f6fa", "#1e3a5f", "#047857", "#a16207"]],
-  ["arcade", "Аркада: тёмная, ретро-неон", ["#0b1120", "#f43f5e", "#4ade80", "#38bdf8"]],
-  ["dusk", "Сумерки: тёмно-фиолетовая", ["#100e22", "#a78bfa", "#34d399", "#fcd34d"]]
-];
-const FONTS = [["modern", "Rubik"], ["pixel", "Пиксель"], ["data", "Fira"], ["book", "Lora"]];
+function sprite(name, size = 24) {
+  let r = "";
+  MAPS[name].forEach((row, y) => [...row].forEach((ch, x) => {
+    if (ch === ".") return;
+    r += `<rect x="${x}" y="${y}" width="1" height="1" fill="currentColor"/>`;
+    if (ch === "2") r += `<rect x="${x}" y="${y}" width="1" height="1" fill="#fff" fill-opacity=".55"/>`;
+    if (ch === "3") r += `<rect x="${x}" y="${y}" width="1" height="1" fill="#000" fill-opacity=".35"/>`;
+  }));
+  return `<svg class="spr" viewBox="0 0 8 8" width="${size}" height="${size}" aria-hidden="true">${r}</svg>`;
+}
+
+/* ---------- prefs (per viewer) ---------- */
 const store = { get(k) { try { return localStorage.getItem(k); } catch { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch {} } };
-function applyLook() {
-  const p = store.get("rb-palette") || "paper", f = store.get("rb-fonts") || "modern";
+const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+let pref = { pal: "arcade", size: "m", scan: true, motion: !reduceMotion, sound: true, vol: 0.8 };
+try { Object.assign(pref, JSON.parse(store.get("rb2.prefs") || "{}")); } catch {}
+const savePref = () => store.set("rb2.prefs", JSON.stringify(pref));
+function applyPref() {
   const r = document.documentElement;
-  p === "paper" ? r.removeAttribute("data-palette") : r.setAttribute("data-palette", p);
-  f === "modern" ? r.removeAttribute("data-fonts") : r.setAttribute("data-fonts", f);
-  document.querySelectorAll("#palettes .sw").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.v === p)));
-  document.querySelectorAll("#fonts .fbtn").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.v === f)));
+  pref.pal === "arcade" ? r.removeAttribute("data-pal") : r.setAttribute("data-pal", pref.pal);
+  r.setAttribute("data-size", pref.size);
+  r.classList.toggle("scan", !!pref.scan);
+  r.classList.toggle("calm", !pref.motion);
 }
-function buildLook() {
-  PALETTES.forEach(([id, label, cs]) => { const b = el("button", "sw"); b.type = "button"; b.dataset.v = id; b.title = label; b.setAttribute("aria-label", label); cs.forEach(c => { const i = el("i"); i.style.background = c; b.append(i); }); b.onclick = () => { store.set("rb-palette", id); applyLook(); }; $("palettes").append(b); });
-  FONTS.forEach(([id, label]) => { const b = el("button", "fbtn", label); b.type = "button"; b.dataset.v = id; b.onclick = () => { store.set("rb-fonts", id); applyLook(); }; $("fonts").append(b); });
-  applyLook();
-}
-const state = { games: [], insights: [], game: "all", q: "", open: new Set(), expanded: new Set(), db: null, canWrite: false };
+applyPref();
+
+/* ---------- chiptune sounds: square and triangle blips, off-switch remembered ---------- */
+const sfx = (() => {
+  let ctx = null, lastHover = 0, lastType = 0;
+  const ready = () => {
+    if (!ctx) { try { ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch { return null; } }
+    if (ctx.state === "suspended") ctx.resume().catch(() => {});
+    return ctx;
+  };
+  function beep(f, at, dur, type = "square", v = 0.02, f2) {
+    const c = ctx; if (!pref.sound || !c || c.state !== "running" || pref.vol <= 0) return;
+    const t = c.currentTime + at, o = c.createOscillator(), g = c.createGain();
+    o.type = type; o.frequency.setValueAtTime(f, t); if (f2) o.frequency.exponentialRampToValueAtTime(f2, t + dur);
+    g.gain.setValueAtTime(v * pref.vol, t); g.gain.setValueAtTime(v * pref.vol, t + dur * 0.6); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g).connect(c.destination); o.start(t); o.stop(t + dur + 0.02);
+  }
+  return {
+    unlock() { if (pref.sound) ready(); },
+    hover() { const n = performance.now(); if (n - lastHover < 70) return; lastHover = n; beep(1250, 0, 0.03, "square", 0.008); },
+    click() { ready(); beep(660, 0, 0.04); beep(990, 0.04, 0.05); },
+    tab() { ready(); [523.25, 659.25, 783.99].forEach((f, i) => beep(f, i * 0.045, 0.07, "triangle", 0.07)); },
+    coin() { ready(); beep(987.77, 0, 0.07, "square", 0.022); beep(1318.5, 0.07, 0.32, "square", 0.022); },
+    drop() { ready(); beep(700, 0, 0.2, "square", 0.018, 200); },
+    open() { ready(); beep(440, 0, 0.05, "triangle", 0.07); beep(880, 0.05, 0.08, "triangle", 0.07); },
+    type() { const n = performance.now(); if (n - lastType < 38) return; lastType = n; beep(320 + Math.random() * 220, 0, 0.018, "square", 0.006); },
+    note(f) { ready(); beep(f, 0, 0.28, "triangle", 0.08); beep(f * 2, 0, 0.1, "square", 0.008); },
+    jingle() { ready(); [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => beep(f, i * 0.07, 0.1, "square", 0.018)); }
+  };
+})();
+document.addEventListener("pointerdown", () => sfx.unlock(), { capture: true });
+document.addEventListener("keydown", () => sfx.unlock(), { capture: true });
+document.addEventListener("pointerover", (e) => {
+  if (e.pointerType && e.pointerType !== "mouse") return;
+  const t = e.target.closest && e.target.closest(".pbtn, .qbtn, .x");
+  if (t && !(e.relatedTarget && t.contains(e.relatedTarget))) sfx.hover();
+});
+
+/* ---------- state + helpers ---------- */
+const TABS = [["like", "Нравится", "--like", ["like"], "heart", "Что хвалят игроки"],
+  ["dislike", "Не нравится", "--dislike", ["dislike"], "broken", "За что ставят минус"],
+  ["request", "Просят", "--request", ["request", "idea"], "bubble", "Просьбы и идеи игроков"],
+  ["takeaway", "Выводы", "--take", ["takeaway"], "star", "Что взять в свою игру"]];
+const state = { games: [], insights: [], game: "all", q: "", tab: store.get("rb2.tab") || "like", open: new Set(), typed: new Set(), db: null, canWrite: false, animate: true };
+if (!TABS.some(t => t[0] === state.tab)) state.tab = "like";
 const $ = (id) => document.getElementById(id);
 const el = (t, c, txt) => { const n = document.createElement(t); if (c) n.className = c; if (txt != null) n.textContent = txt; return n; };
+const html = (t, c, h) => { const n = el(t, c); n.innerHTML = h; return n; };
 const gameName = (id) => (state.games.find(g => g.id === id) || {}).name || id;
-const CHECK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>';
 const scoped = () => state.insights.filter(i => state.game === "all" || i.game === state.game);
 const taken = (i) => i.forMyGame === "use" || i.forMyGame === "avoid" || i.forMyGame === "maybe";
-
+const tabOf = (i) => TABS.find(t => t[3].includes(i.type)) || TABS[0];
+const plural = (n, a, b, c) => { const m = n % 10, h = n % 100; return n + " " + (m === 1 && h !== 11 ? a : m >= 2 && m <= 4 && (h < 10 || h >= 20) ? b : c); };
 function matches(i) {
   if (!state.q) return true;
   const hay = [i.text, i.theme, (i.quotes || []).map(q => q.text).join(" ")].join(" ").toLowerCase();
   return state.q.toLowerCase().split(/\s+/).every(w => hay.includes(w));
 }
-async function toggle(i) {
-  if (!state.db || !state.canWrite) return;
-  try { await state.db.doc("insights/" + i.id).update({ forMyGame: taken(i) ? "" : "use" }); } catch {}
+function popAt(node, text) {
+  if (!pref.motion) return;
+  const r = node.getBoundingClientRect(), p = el("span", "pop", text);
+  p.style.left = (r.left + r.width / 2 - 14) + "px"; p.style.top = (r.top - 6) + "px";
+  document.body.append(p); setTimeout(() => p.remove(), 850);
 }
+async function toggle(i, node) {
+  if (!state.db || !state.canWrite) return;
+  const next = taken(i) ? "" : "use";
+  if (next) { sfx.coin(); if (node) popAt(node, "+1"); } else sfx.drop();
+  i.forMyGame = next; state.animate = false; renderGameCard(); renderQuest(true); renderList();
+  try { await state.db.doc("insights/" + i.id).update({ forMyGame: next }); } catch {}
+}
+
+/* ---------- hero sprites ---------- */
+[["heart", "--dislike", 523.25], ["coin", "--take", 587.33], ["star", "--take", 659.25], ["gem", "--request", 783.99],
+ ["potion", "--accent", 880], ["key", "--take", 987.77], ["shield", "--request", 1046.5], ["bubble", "--like", 1174.66]].forEach(([n, c, hz]) => {
+  const b = html("button", "sprite", sprite(n, 40)); b.type = "button"; b.tabIndex = -1; b.style.color = `var(${c})`;
+  const play = () => { sfx.note(hz); b.classList.remove("hop"); void b.offsetWidth; b.classList.add("hop"); };
+  b.addEventListener("pointerenter", (e) => { if (e.pointerType === "mouse") play(); });
+  b.addEventListener("pointerdown", () => { sfx.unlock(); setTimeout(play, 20); });
+  b.addEventListener("animationend", (e) => { if (e.animationName === "hop") b.classList.remove("hop"); });
+  $("sprites").append(b);
+});
+
+/* ---------- render ---------- */
+function renderSnd() { const b = $("sndBtn"); b.setAttribute("aria-pressed", String(pref.sound)); b.textContent = pref.sound ? "♪ Звук" : "✕ Без звука"; b.setAttribute("aria-label", pref.sound ? "Выключить звуки" : "Включить звуки"); }
 function renderGames() {
   const g = $("games"); g.replaceChildren();
-  const mk = (id, label, pct) => { const b = el("button", "game", label); b.type = "button"; b.setAttribute("aria-pressed", String(state.game === id)); if (pct != null) b.append(el("small", null, pct + "%")); b.onclick = () => { state.game = id; renderAll(); }; g.append(b); };
-  mk("all", "Все игры (" + state.games.length + ")");
+  const mk = (id, label, pct) => {
+    const b = el("button", "pbtn px game", label); b.type = "button"; b.setAttribute("aria-pressed", String(state.game === id || state.games.length === 1));
+    if (pct != null) b.append(el("small", null, pct + "%"));
+    b.onclick = () => { sfx.click(); state.game = id; state.animate = true; renderAll(); };
+    g.append(b);
+  };
+  if (state.games.length > 1) mk("all", "Все игры");
   state.games.forEach(gm => mk(gm.id, gm.name, gm.positivePct));
-  const gm = state.games.find(x => x.id === state.game);
-  $("summary").hidden = !gm; if (gm) $("summary").textContent = (gm.reviewsTotal ? gm.positivePct + "% положительных из " + gm.reviewsTotal + ". " : "") + (gm.summary || "");
 }
-function renderMine() {
-  const m = $("mine"); m.replaceChildren();
-  const h = el("h2"); h.innerHTML = CHECK.replace('width="24"', ""); h.firstChild.style.cssText = "width:14px;height:14px"; h.append(document.createTextNode("Учесть в моей игре"));
-  m.append(h);
+function renderGameCard() {
+  const box = $("gamecard");
+  const gm = state.games.find(x => x.id === state.game) || (state.games.length === 1 ? state.games[0] : null);
+  box.hidden = !gm; if (!gm) return;
+  box.replaceChildren();
+  const left = el("div");
+  left.append(el("h2", "gc-name", gm.name));
+  left.append(el("p", "gc-sub", [gm.genre, gm.released ? "вышла " + gm.released.split("-").reverse().join(".") : "", gm.price].filter(Boolean).join(" · ")));
+  const stat = (label, pct, val, c) => { const s = el("div", "stat"); s.append(el("span", null, label)); const m = el("span", "meter"); const f = el("i"); f.style.width = pct + "%"; m.style.setProperty("--c", `var(${c})`); m.append(f); s.append(m, el("b", null, val)); left.append(s); };
+  if (gm.positivePct != null) stat("Рейтинг", gm.positivePct, gm.positivePct + "%", "--like");
+  const mine = state.insights.filter(i => i.game === gm.id), done = mine.filter(taken).length;
+  if (mine.length) stat("Учтено", Math.round(done / mine.length * 100), done + "/" + mine.length, "--take");
+  if (gm.reviewsTotal) { const s = el("p", "gc-sub", "Отзывов в Steam: " + gm.reviewsTotal + (gm.sample ? ". Разобрано: " + gm.sample : "")); s.style.margin = "12px 0 0"; left.append(s); }
+  const d = el("div", "dialog px"); d.append(el("span", "who", "Итог"), el("p", null, gm.summary || "Сводки пока нет."));
+  box.append(left, d);
+}
+function renderQuest(bump) {
+  const box = $("quest"); box.replaceChildren();
   const picked = state.insights.filter(taken);
-  if (!picked.length) { m.append(el("p", null, "Пока пусто. Отметьте галочкой строки в колонках ниже.")); return; }
-  const ul = el("ul");
-  picked.forEach(i => { const li = el("li", null, i.text + " "); li.append(el("span", null, "· " + gameName(i.game))); ul.append(li); });
-  m.append(ul);
+  const head = el("div", "quest-head");
+  head.append(html("span", null, sprite("shield", 22)));
+  const h = el("h2", null, "Квест-лог"); h.id = "questTitle"; head.append(h, el("span", null, "что учесть в моей игре"));
+  const cnt = el("b", "count" + (bump ? " bump" : ""), String(picked.length)); cnt.setAttribute("aria-label", plural(picked.length, "пункт", "пункта", "пунктов")); head.append(cnt);
+  box.append(head);
+  if (!picked.length) { box.append(el("p", "empty-q", "Пусто. Нажмите «Учесть» на карточке — пункт появится здесь.")); return; }
+  const ol = el("ol");
+  picked.forEach(i => {
+    const t = tabOf(i), li = el("li");
+    const ic = html("span", null, sprite(t[4], 22)); ic.style.color = `var(${t[2]})`;
+    const txt = el("div", null, i.text); txt.append(el("small", null, t[1] + " · " + gameName(i.game)));
+    li.append(ic, txt);
+    if (state.canWrite) { const x = el("button", "x", "✕"); x.type = "button"; x.setAttribute("aria-label", "Убрать из квест-лога"); x.onclick = () => toggle(i); li.append(x); }
+    ol.append(li);
+  });
+  box.append(ol);
 }
-function row(i, n) {
-  const r = el("div", "row");
-  const t = el("button", "row-text"); t.type = "button"; t.setAttribute("aria-expanded", String(state.open.has(i.id)));
-  t.append(el("span", "rank", String(n + 1).padStart(2, "0")), document.createTextNode(i.text));
-  const meta = el("div", "row-meta");
-  if (i.share) { const bs = el("span", "bar-share"); const fill = el("i"); fill.style.width = Math.min(100, i.share * 4) + "%"; bs.append(fill); meta.append(bs, el("span", null, "~" + i.share + "%")); }
+function renderTabs() {
+  const box = $("tabs"); box.replaceChildren();
+  TABS.forEach(([key, label, cv, types, spr]) => {
+    const n = scoped().filter(i => types.includes(i.type) && matches(i)).length;
+    const b = el("button", "pbtn px tab"); b.type = "button"; b.setAttribute("role", "tab"); b.id = "tab-" + key;
+    b.setAttribute("aria-selected", String(state.tab === key)); b.tabIndex = state.tab === key ? 0 : -1; b.style.setProperty("--c", `var(${cv})`);
+    b.innerHTML = sprite(spr, 24); b.append(el("span", null, label), el("span", "n", String(n)));
+    b.onclick = () => selectTab(key);
+    box.append(b);
+  });
+  const t = TABS.find(x => x[0] === state.tab); $("tabNote").textContent = t[5] + (state.q ? " · поиск: «" + state.q + "»" : "");
+  $("list").setAttribute("aria-labelledby", "tab-" + state.tab);
+}
+function selectTab(key, focus) {
+  if (key === state.tab) return;
+  sfx.tab(); state.tab = key; store.set("rb2.tab", key); state.animate = true; renderTabs(); renderList();
+  if (focus) $("tab-" + key).focus();
+}
+$("tabs").addEventListener("keydown", (e) => {
+  const i = TABS.findIndex(t => t[0] === state.tab), d = e.key === "ArrowRight" ? 1 : e.key === "ArrowLeft" ? -1 : 0;
+  if (d) { e.preventDefault(); selectTab(TABS[(i + d + TABS.length) % TABS.length][0], true); }
+});
+function typeInto(node, text, id) {
+  if (!pref.motion || state.typed.has(id)) { node.textContent = text; return; }
+  state.typed.add(id); let k = 0;
+  const step = () => { if (!node.isConnected) return; k = Math.min(text.length, k + 2); node.textContent = text.slice(0, k); sfx.type(); if (k < text.length) setTimeout(step, 16); };
+  node.closest(".dialog").addEventListener("click", () => { k = text.length; node.textContent = text; }, { once: true });
+  step();
+}
+function card(i, n, max) {
+  const t = tabOf(i), c = el("article", "card px"); c.style.setProperty("--c", `var(${t[2]})`); c.style.setProperty("--i", n);
+  const body = el("div");
+  body.append(el("span", "rank", String(n + 1).padStart(2, "0") + (i.type === "idea" ? " · идея" : "")), el("p", "card-text", i.text));
+  c.append(body);
+  if (state.canWrite) {
+    const b = el("button", "pbtn px pick"); b.type = "button"; b.setAttribute("aria-pressed", String(taken(i)));
+    const box = el("span", "box"); if (taken(i)) box.innerHTML = sprite("check", 16);
+    b.append(box, el("span", null, taken(i) ? "В квесте" : "Учесть")); b.title = "Учесть в моей игре";
+    b.onclick = () => toggle(i, b); c.append(b);
+  }
+  const meta = el("div", "meta");
+  if (i.theme) meta.append(el("span", "tag", i.theme));
+  if (i.share) { const x = el("span", "xp"); const m = el("span", "meter"); m.style.setProperty("--c", `var(${t[2]})`); const f = el("i"); f.style.width = Math.max(8, Math.round(i.share / max * 100)) + "%"; m.append(f); x.append(m, el("span", null, "~" + i.share + "% отзывов")); meta.append(x); }
   if (state.game === "all" && state.games.length > 1) meta.append(el("span", null, gameName(i.game)));
-  if ((i.quotes || []).length) meta.append(el("span", null, state.open.has(i.id) ? "скрыть цитаты" : "цитаты"));
-  t.append(meta);
-  t.onclick = () => { state.open.has(i.id) ? state.open.delete(i.id) : state.open.add(i.id); renderCols(); };
-  const left = el("div"); left.append(t);
-  r.append(left);
-  if (state.canWrite) { const b = el("button", "tick"); b.type = "button"; b.innerHTML = CHECK; b.setAttribute("aria-pressed", String(taken(i))); b.setAttribute("aria-label", "Учесть в моей игре"); b.title = "Учесть в моей игре"; b.onclick = () => toggle(i); r.append(b); }
-  if (state.open.has(i.id) && (i.quotes || []).length) {
-    const qs = el("div", "quotes");
-    i.quotes.slice(0, 2).forEach(q => { const bq = el("blockquote"); if (q.url) { const a = el("a", null, "«" + q.text + "»"); a.href = q.url; a.target = "_blank"; a.rel = "noopener"; bq.append(a); } else bq.textContent = "«" + q.text + "»"; qs.append(bq); });
-    r.append(qs);
+  const qs = i.quotes || [];
+  if (qs.length) {
+    const open = state.open.has(i.id);
+    const qb = el("button", "qbtn", (open ? "▾ Скрыть цитаты" : "▸ Цитаты игроков") + " (" + qs.length + ")"); qb.type = "button"; qb.setAttribute("aria-expanded", String(open));
+    qb.onclick = () => { if (open) { state.open.delete(i.id); sfx.click(); } else { state.open.add(i.id); sfx.open(); } state.animate = false; renderList(); };
+    meta.append(qb);
   }
-  return r;
-}
-function renderCols() {
-  const box = $("cols"); box.replaceChildren();
-  if (!state.insights.length) { box.append(Object.assign(el("div", "empty"), { textContent: "База пока пустая. Попросите Claude разобрать первую игру: фраза внизу страницы." })); return; }
-  for (const [key, label, cv, types] of COLS) {
-    const items = scoped().filter(i => types.includes(i.type) && matches(i)).sort((a, b) => (b.share || 0) - (a.share || 0));
-    const col = el("section", "col"); col.style.setProperty("--c", `var(${cv})`);
-    const h = el("h2"); h.innerHTML = svg(ICON[key]); h.append(document.createTextNode(label)); h.append(el("b", null, String(items.length))); col.append(h);
-    const show = state.expanded.has(key) ? items : items.slice(0, TOP);
-    show.forEach((i, n) => col.append(row(i, n)));
-    if (!items.length) col.append(el("p", "row-meta", "Ничего"));
-    if (items.length > TOP) { const mb = el("button", "more", state.expanded.has(key) ? "Свернуть" : "Показать ещё " + (items.length - TOP)); mb.type = "button"; mb.onclick = () => { state.expanded.has(key) ? state.expanded.delete(key) : state.expanded.add(key); renderCols(); }; col.append(mb); }
-    box.append(col);
+  c.append(meta);
+  if (qs.length && state.open.has(i.id)) {
+    const box = el("div", "quotes");
+    qs.slice(0, 3).forEach((q, k) => {
+      const d = el("div", "dialog px"); const who = el("span", "who", "Игрок"); if (q.lang) who.append(el("span", "lang", q.lang)); d.append(who);
+      const p = el("p"); d.append(p);
+      if (q.url) { const a = el("a", null, "Открыть отзыв в Steam ↗"); a.href = q.url; a.target = "_blank"; a.rel = "noopener"; d.append(a); }
+      box.append(d); typeInto(p, "«" + q.text + "»", i.id + ":" + k);
+    });
+    c.append(box);
   }
+  return c;
 }
-function renderAll() { renderGames(); renderMine(); renderCols(); }
-$("q").addEventListener("input", e => { state.q = e.target.value.trim(); renderCols(); });
-$("copyBtn").onclick = async () => { try { await navigator.clipboard.writeText($("phraseText").textContent); $("copyBtn").textContent = "Скопировано"; } catch { const r = document.createRange(); r.selectNodeContents($("phraseText")); const s = getSelection(); s.removeAllRanges(); s.addRange(r); } };
-buildLook();
-renderAll();
+function renderList() {
+  const box = $("list"); box.replaceChildren(); box.classList.toggle("enter", state.animate);
+  if (!state.insights.length) { box.append(el("div", "empty px", "База пока пустая. Попросите Claude разобрать первую игру — фраза внизу страницы.")); return; }
+  const t = TABS.find(x => x[0] === state.tab);
+  const items = scoped().filter(i => t[3].includes(i.type) && matches(i)).sort((a, b) => (b.share || 0) - (a.share || 0));
+  if (!items.length) { box.append(el("div", "empty px", state.q ? "Ничего не нашлось. Попробуйте другое слово или другую вкладку." : "В этом разделе пока пусто.")); return; }
+  const max = Math.max(...items.map(i => i.share || 0), 1);
+  items.forEach((i, n) => box.append(card(i, n, max)));
+}
+function renderAll() { renderGames(); renderGameCard(); renderQuest(); renderTabs(); renderList(); }
+
+/* ---------- settings ---------- */
+const PALS = [["arcade", "Аркада", ["#0b0d1a", "#ff4fa3", "#3ddc84", "#4cc9f0"]], ["sunset", "Закат", ["#1a0b2e", "#ff7edb", "#72f1b8", "#fede5d"]],
+  ["screen", "Зелёный экран", ["#0e2410", "#c6e35a", "#9be05a", "#e3f7c8"]], ["cart", "Картридж", ["#e6e0d2", "#c2185b", "#2e7d32", "#1565c0"]]];
+function opt(label, on, fn, sw) { const b = el("button", "pbtn px"); b.type = "button"; b.setAttribute("aria-pressed", String(on)); if (sw) { const s = el("span", "pal-sw"); sw.forEach(c => { const i = el("i"); i.style.background = c; s.append(i); }); b.append(s); } b.append(el("span", null, label)); b.onclick = () => { fn(); savePref(); applyPref(); renderSettings(); renderSnd(); sfx.click(); }; return b; }
+function renderSettings() {
+  $("optPal").replaceChildren(...PALS.map(([id, l, sw]) => opt(l, pref.pal === id, () => pref.pal = id, sw)));
+  $("optSize").replaceChildren(...[["s", "Мелкий"], ["m", "Средний"], ["l", "Крупный"]].map(([id, l]) => opt(l, pref.size === id, () => pref.size = id)));
+  $("optFx").replaceChildren(opt("Анимации", pref.motion, () => pref.motion = !pref.motion), opt("Полосы ЭЛТ", pref.scan, () => pref.scan = !pref.scan), opt("Звук", pref.sound, () => pref.sound = !pref.sound));
+  $("vol").value = pref.vol;
+}
+$("setBtn").onclick = () => { sfx.open(); renderSettings(); $("setDlg").showModal(); };
+$("setClose").onclick = () => { sfx.click(); $("setDlg").close(); };
+$("setDlg").addEventListener("click", (e) => { if (e.target === $("setDlg")) $("setDlg").close(); });
+$("vol").addEventListener("input", (e) => { pref.vol = +e.target.value; savePref(); });
+$("vol").addEventListener("change", () => sfx.note(659.25));
+$("sndBtn").onclick = () => { pref.sound = !pref.sound; savePref(); renderSnd(); if (pref.sound) sfx.jingle(); };
+let qTimer; $("q").addEventListener("input", e => { clearTimeout(qTimer); qTimer = setTimeout(() => { state.q = e.target.value.trim(); state.animate = false; renderTabs(); renderList(); }, 120); });
+$("copyBtn").onclick = async () => { try { await navigator.clipboard.writeText($("phraseText").textContent); $("copyBtn").textContent = "Скопировано"; sfx.jingle(); } catch { const r = document.createRange(); r.selectNodeContents($("phraseText")); const s = getSelection(); s.removeAllRanges(); s.addRange(r); } };
+
+renderSnd(); renderAll();
 (async () => {
   const c = window.claude; const db = c ? await c.use("db") : null;
-  if (!db) { $("cols").replaceChildren(Object.assign(el("div", "empty"), { textContent: "База недоступна в этом окне. Откройте страницу на claude.ai, войдя в аккаунт." })); return; }
+  if (!db) { $("list").replaceChildren(el("div", "empty px", "База недоступна в этом окне. Откройте страницу на claude.ai, войдя в аккаунт.")); return; }
   state.db = db;
   const user = await c.use("user"); const cw = user ? await user.can("data.write") : null; state.canWrite = cw !== false;
-  const t = setTimeout(() => { if (!state.insights.length) $("cols").replaceChildren(Object.assign(el("div", "empty"), { textContent: "База пока не загрузилась. Проверьте соединение: страница обновится сама." })); }, 10000);
+  const t = setTimeout(() => { if (!state.insights.length) $("list").replaceChildren(el("div", "empty px", "База пока не загрузилась. Проверьте соединение: страница обновится сама.")); }, 10000);
+  let first = true;
   db.collection("games").onSnapshot(s => { state.games = s.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => String(b.analyzedAt || "").localeCompare(String(a.analyzedAt || ""))); renderAll(); }, () => {});
-  db.collection("insights").onSnapshot(s => { clearTimeout(t); state.insights = s.docs.map(d => ({ id: d.id, ...d.data() })); renderAll(); }, () => clearTimeout(t));
+  db.collection("insights").onSnapshot(s => { clearTimeout(t); state.insights = s.docs.map(d => ({ id: d.id, ...d.data() })); state.animate = first; first = false; renderAll(); }, () => clearTimeout(t));
 })();
 </script>
