@@ -182,6 +182,18 @@ h1 { font: 400 clamp(22px, 4.6vw, 40px)/1.35 var(--f-pixel); margin: 10px 0 0; l
 .prop { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 12px; padding: 12px; background: var(--dlg); cursor: pointer; }
 .prop input { width: 20px; height: 20px; accent-color: var(--accent); margin-top: 2px; }
 .prop b { display: block; } .prop span { color: var(--ink-2); font-size: .92rem; } .prop small { display: block; color: var(--dislike); }
+.shots-box:not(:empty) { margin-top: 26px; display: grid; gap: 12px; }
+.shots-head { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; }
+.shots-head h4 { margin: 0; font: 400 11px/1.6 var(--f-pixel); color: var(--request); }
+.shots-head .pbtn { min-height: 36px; font-size: .88rem; margin-left: auto; }
+.shots { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+@media (max-width: 640px) { .shots { grid-template-columns: 1fr; } }
+.shot { margin: 3px; background: var(--surface); display: grid; }
+.shot img { display: block; width: 100%; aspect-ratio: 16 / 9; object-fit: cover; background: var(--surface-2); }
+.shot-wait { aspect-ratio: 16 / 9; display: grid; place-items: center; text-align: center; padding: 12px; background: var(--surface-2); color: var(--ink-2); font: 400 10px/1.7 var(--f-pixel); }
+.shot figcaption { display: grid; gap: 4px; padding: 10px 12px; font-size: .9rem; }
+.shot-links { display: flex; flex-wrap: wrap; gap: 4px 16px; align-items: center; }
+.shot-links a { color: var(--request); font: 600 .86rem var(--f-head); }
 .gen-pick h3 { margin: 0; font: 400 12px/1.6 var(--f-pixel); color: var(--accent); }
 .hint { margin: 0; color: var(--ink-2); font-size: .92rem; }
 
@@ -778,6 +790,7 @@ function renderGenOut(fresh) {
     if (G.ai === "error") ai.append(el("p", "hint", G.aiErr)); else ai.append(el("p", "ai-text" + (G.ai === "loading" && !G.aiText ? " loading" : ""), G.aiText || "Claude думает"));
     d.append(ai);
   }
+  d.append(el("div", "shots-box"));
   const acts = el("div", "gen-actions");
   const again = el("button", "pbtn px", "Ещё раз"); again.type = "button"; again.onclick = spin; acts.append(again);
   if (sampleFn) { const imp = el("button", "pbtn px", G.ai === "loading" ? "Claude пишет…" : "Расписать подробно с Claude"); imp.type = "button"; imp.disabled = G.ai === "loading"; imp.onclick = improve; acts.append(imp); }
@@ -785,21 +798,94 @@ function renderGenOut(fresh) {
   cp.onclick = async () => { try { await navigator.clipboard.writeText(resultText()); cp.textContent = "Скопировано"; sfx.jingle(); } catch {} };
   acts.append(cp); d.append(acts);
   box.append(d);
+  if (G.ai) renderShots();
 }
 async function improve() {
   if (!sampleFn || !G.result || G.ai === "loading") return;
-  sfx.open(); G.ai = "loading"; G.aiText = ""; renderGenOut();
+  sfx.open(); G.ai = "loading"; G.aiText = ""; IMG.status = ""; IMG.items = []; IMG.key = ""; renderGenOut();
   const prompt = "Ты геймдизайнер инди-игр. Вот черновик идеи 2D-игры для соло-разработчика:\n\n" + resultText()
     + "\n\nДоработай его в полноценный концепт игры." + (G.result.B ? " Две механики должны сплестись в одну новую, узнаваемую, но свежую — объясни, как именно они работают вместе." : "")
     + " Ответь по-русски, простым текстом без Markdown и без звёздочек, до 280 слов. Короткие заголовки на отдельных строках: Название; Суть (2 предложения); Герой и мир; Что игрок делает каждую минуту (конкретно, с примером одной сцены); Игровой цикл; Прогрессия; Три типа врагов или препятствий; На какие игры похоже и чем отличается; Финал игры; Что взяли из отзывов (если есть); Прототип за выходные.";
   try {
     const res = await sampleFn(prompt, { onText: ({ text }) => { G.aiText = text; const n = document.querySelector("#genOut .ai-text"); if (n) { n.textContent = text; n.classList.remove("loading"); } } });
     G.aiText = res.text; G.ai = "done"; sfx.jingle();
+    genImages();
   } catch (e) {
     if (e && e.code === "not_granted") { sampleFn = null; G.ai = null; }
     else { G.ai = "error"; G.aiErr = e && e.code === "rate_limited" ? "Слишком много запросов. Попробуйте через минуту." : "Не получилось спросить Claude. Попробуйте позже."; }
   }
   renderGenOut();
+}
+/* ---------- two gameplay reference images: Claude writes the prompts, Magnific (viewer's connector) draws them ---------- */
+let mcpApi = null;
+const IMG = { status: "", items: [], err: "", key: "" };
+async function genImages() {
+  const r = G.result; if (!r || !sampleFn || IMG.status === "work") return;
+  const key = resultText().slice(0, 200);
+  IMG.status = "work"; IMG.err = ""; IMG.items = []; IMG.key = key; renderShots();
+  let prompts = [];
+  try {
+    const out = await sampleFn.json("Ты арт-директор инди-игр. Вот концепт 2D-игры:\n\n" + resultText()
+      + "\n\nНапиши два промпта на английском для генерации картинок-референсов геймплея — два разных момента игры (например, обычный момент игрового цикла и напряжённая сцена с врагами). Каждый промпт начинается словами \"2D indie game gameplay screenshot,\", описывает вид (сбоку, сверху или изометрия, как подходит жанру), стиль (пиксель-арт или рисованный 2D, как подходит сеттингу), героя, врагов, место, интерфейс (HUD) и что происходит. Без названий существующих игр и брендов, без текста на экране, кроме цифр счётчиков. До 70 слов каждый. Верни только JSON: {\"shots\":[{\"title\":\"короткая подпись по-русски\",\"prompt\":\"...\"},{\"title\":\"...\",\"prompt\":\"...\"}]}");
+    prompts = (out && Array.isArray(out.shots) ? out.shots : []).filter(x => x && x.prompt).slice(0, 2).map(x => ({ title: String(x.title || "Сцена"), prompt: String(x.prompt) }));
+  } catch (e) { IMG.status = "error"; IMG.err = "Claude не написал промпты для картинок. Попробуйте «Перерисовать»."; renderShots(); return; }
+  if (!prompts.length) { IMG.status = "error"; IMG.err = "Claude не написал промпты для картинок."; renderShots(); return; }
+  IMG.items = prompts.map(x => ({ ...x, status: "queued" }));
+  if (!mcpApi) { IMG.status = "noapi"; renderShots(); return; }
+  renderShots();
+  try {
+    for (const it of IMG.items) {
+      const res = await mcpApi.callTool("Magnific", "images_generate", { prompt: it.prompt, count: 1, aspectRatio: "16:9", mode: "auto" });
+      const c = res && res.payload && Array.isArray(res.payload.creations) ? res.payload.creations[0] : null;
+      if (c) { it.id = c.identifier; it.webUrl = c.webUrl; it.status = "work"; } else it.status = "failed";
+      if (IMG.key !== key) return;
+      renderShots();
+    }
+    for (let round = 0; round < 6; round++) {
+      const ids = IMG.items.filter(i => i.id && i.status === "work").map(i => i.id); if (!ids.length) break;
+      const res = await mcpApi.callTool("Magnific", "creations_wait", { creationIdentifiers: ids, timeoutSeconds: 55 });
+      if (IMG.key !== key) return;
+      ((res && res.payload && res.payload.results) || []).forEach(x => {
+        const it = IMG.items.find(i => i.id === x.identifier); if (!it) return;
+        if (x.status === "completed" && x.results) { it.status = "done"; it.img = x.results.previewUrl || x.results.url; it.full = x.results.url; }
+        else if (x.status === "failed" || x.status === "error") it.status = "failed";
+      });
+      renderShots();
+    }
+    IMG.status = "done"; if (IMG.items.some(i => i.status === "done")) sfx.coin();
+  } catch (e) {
+    IMG.status = "error";
+    IMG.err = e && (e.code === "not_granted" || e.code === "denied") ? "Доступ к Magnific не разрешён. Промпты ниже можно скопировать и сгенерировать вручную."
+      : e && e.code === "server_not_connected" ? "Magnific не подключён в вашем аккаунте claude.ai. Промпты ниже можно скопировать."
+      : "Magnific не ответил. Промпты ниже можно скопировать или нажать «Перерисовать».";
+  }
+  renderShots();
+}
+function renderShots() {
+  const box = document.querySelector("#genOut .shots-box"); if (!box) return;
+  box.replaceChildren();
+  if (!IMG.status) return;
+  const head = el("div", "shots-head"); head.append(el("h4", null, "Референсы геймплея"));
+  if (IMG.status !== "work") { const b = el("button", "pbtn px", "Перерисовать"); b.type = "button"; b.onclick = () => { sfx.click(); genImages(); }; head.append(b); }
+  box.append(head);
+  if (IMG.status === "work" && !IMG.items.length) box.append(el("p", "hint loading", "Claude пишет промпты для двух сцен"));
+  if (IMG.err) box.append(el("p", "hint", IMG.err));
+  if (IMG.status === "noapi") box.append(el("p", "hint", "Генерация картинок недоступна в этом окне: нужен подключённый Magnific. Промпты можно скопировать."));
+  const grid = el("div", "shots");
+  IMG.items.forEach(it => {
+    const f = el("figure", "shot px");
+    if (it.img) {
+      const im = el("img"); im.alt = it.title + ": " + it.prompt; im.loading = "lazy"; im.src = it.img;
+      im.onerror = () => { const w = el("div", "shot-wait", "Картинка готова — откройте её в Magnific"); im.replaceWith(w); };
+      f.append(im);
+    } else f.append(el("div", "shot-wait" + (it.status === "work" || it.status === "queued" ? " loading" : ""), it.status === "failed" ? "Не получилось нарисовать" : IMG.status === "work" ? "Рисую" : "Промпт готов"));
+    const cap = el("figcaption"); cap.append(el("b", null, it.title));
+    const links = el("span", "shot-links");
+    if (it.webUrl) { const a = el("a", null, "Открыть в Magnific ↗"); a.href = it.webUrl; a.target = "_blank"; a.rel = "noopener"; links.append(a); }
+    const cp = el("button", "qbtn", "Копировать промпт"); cp.type = "button"; cp.onclick = async () => { try { await navigator.clipboard.writeText(it.prompt); cp.textContent = "Скопировано"; sfx.click(); } catch {} };
+    links.append(cp); cap.append(links); f.append(cap); grid.append(f);
+  });
+  box.append(grid);
 }
 function renderIngr() {
   const n = G.games.size + G.ins.size;
@@ -1190,6 +1276,7 @@ $("bankIcon").innerHTML = sprite("heart", 20);
   if (!db) { $("list").replaceChildren(el("div", "empty px", "База недоступна в этом окне. Откройте страницу на claude.ai, войдя в аккаунт.")); return; }
   state.db = db;
   c.use("sample").then(s => { if (s) { sampleFn = s; renderGenOut(); } }).catch(() => {});
+  c.use("mcp").then(m => { mcpApi = m || null; }).catch(() => {});
   const user = await c.use("user"); const cw = user ? await user.can("data.write") : null; state.canWrite = cw !== false;
   renderShop();
   const t = setTimeout(() => { if (!state.insights.length) $("list").replaceChildren(el("div", "empty px", "База пока не загрузилась. Проверьте соединение: страница обновится сама.")); }, 10000);
