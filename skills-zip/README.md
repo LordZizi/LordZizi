@@ -6,6 +6,7 @@
 - **Свои:** skills-catalog, tripo-3d-presets, game-production-pipeline
 - **Дизайн:** ui-ux-pro-max, design, brand, banner-design, slides + design-system (ставить вместе), ui-styling
 - **Игры:** game-feel, game-design-theory, level-designer, game-ui-ux, game-vfx, multiplayer-game-architecture, game-performance-profiler, web-game-development
+- **Пиксельные эффекты:** pixelfx (244 эффекта пиксель-арта, MIT, patch-gg/pixelfx; библиотека внутри архива; в игру класть THIRD_PARTY_LICENSES.txt), также game-constructor (конструктор игр)
 - **Тексты:** infostyle
 - **Исследования:** steam-reviews (отзывы Steam: скачать, посчитать, разобрать)
 - **Графика и видео (свои, по мотивам Scenario):** game-art-qa, game-art-production, game-trailer-video, game-audio, game-marketing, comics-storyboards, magnific-models
